@@ -24,11 +24,11 @@ class RecipesSerializer(serializers.ModelSerializer):
         # lookup_field = "slug"
         fields = (
             "id",
-            "name",
-            "image",
-            "text",
             "ingredients",
             "tags",
+            "image",
+            "name",
+            "text",
             "cooking_time",
         )
         model = Recipes

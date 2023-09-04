@@ -48,6 +48,7 @@ class Recipes(models.Model):
 
     name = models.CharField(
         max_length=256,
+        blank=False,
         verbose_name="Название блюда",
     )
     # author = models.ForeignKey(
@@ -61,13 +62,13 @@ class Recipes(models.Model):
     ingredients = models.ManyToManyField(
         Ingredients,
         related_name="ingredients",
-        blank=True,
+        blank=False,
         verbose_name="Тег",
     )
     tags = models.ManyToManyField(
         Tags,
         related_name="tags",
-        blank=True,
+        blank=False,
         verbose_name="Тег",
     )
     cooking_time = models.IntegerField(
@@ -82,5 +83,5 @@ class Recipes(models.Model):
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
 
-    def __str__(self):
-        return self.name
+    # def __str__(self):
+    #    return self.name
