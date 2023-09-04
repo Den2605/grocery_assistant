@@ -7,6 +7,7 @@ router.register(r"recipes", RecipesViewSet, basename="recipes")
 
 urlpatterns = [
     path("", include(router.urls)),
-    # path("v1/auth/signup/", UserSignUpView.as_view(), name="signup"),
-    # path("v1/auth/token/", TokenView.as_view(), name="get_token"),
+    path("auth/", include("djoser.urls")),
+    # JWT-эндпоинты, для управления JWT-токенами:
+    path("auth/", include("djoser.urls.jwt")),
 ]
