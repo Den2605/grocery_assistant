@@ -53,10 +53,10 @@ class Recipes(models.Model):
     # author = models.ForeignKey(
     #    User,
     #    on_delete=models.CASCADE,
-    #    related_name="recepies",
+    #    related_name="users",
     #    verbose_name="Пользователь",
     # )
-    image = models.ImageField(upload_to="/images/", blank=False)
+    image = models.ImageField(upload_to="data/images/", blank=False)
     text = models.CharField(max_length=255, verbose_name="Описание блюда")
     ingredients = models.ManyToManyField(
         Ingredients,
