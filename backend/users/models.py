@@ -12,6 +12,7 @@ username_validator = RegexValidator(
 
 
 class CustomUser(AbstractUser):
+    USERNAME_FIELD = "email"
     email = models.EmailField(
         verbose_name="Адрес электронной почты",
         unique=True,
@@ -19,7 +20,7 @@ class CustomUser(AbstractUser):
         max_length=254,
     )
     username = models.CharField(
-        verbose_name="Уникальный юзернейм",
+        verbose_name="Уникальное имя пользователя",
         unique=True,
         blank=False,
         max_length=150,
@@ -36,11 +37,18 @@ class CustomUser(AbstractUser):
         blank=False,
     )
     password = models.CharField(
+        verbose_name="Пароль",
         max_length=100,
         unique=True,
         blank=False,
         null=True,
     )
+    REQUIRED_FIELDS = [
+        "username",
+        "first_name",
+        "last_name",
+        "password",
+    ]
 
     class Meta:
         ordering = ["id"]

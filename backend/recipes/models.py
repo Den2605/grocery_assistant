@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import CustomUser
 
 
 class Tags(models.Model):
@@ -51,12 +52,13 @@ class Recipes(models.Model):
         blank=False,
         verbose_name="Название блюда",
     )
-    # author = models.ForeignKey(
-    #    User,
-    #    on_delete=models.CASCADE,
-    #    related_name="users",
-    #    verbose_name="Пользователь",
-    # )
+    author = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        blank=False,
+        related_name="users",
+        verbose_name="Пользователь",
+    )
     image = models.ImageField(upload_to="data/images/", blank=False)
     text = models.CharField(max_length=255, verbose_name="Описание блюда")
     ingredients = models.ManyToManyField(

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "sorl.thumbnail",
     "rest_framework",
+    "rest_framework.authtoken",
     "djoser",
 ]
 
@@ -138,10 +139,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
+        # "rest_framework.permissions.IsAuthenticated",
+        "rest_framework.permissions.AllowAny",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
     ],
 }
 
@@ -152,4 +154,19 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = "users.CustomUser"
-DJOSER = {"LOGIN_FIELD": "email"}
+DJOSER = {
+    "HIDE_USERS": False,
+    "LOGIN_FIELD": "email",
+    "SERIALIZERS": {
+        # "user_create": "path.to.custom.serializer.UserCreateSerializer",
+        "user": "users.serializers.CustomUserSerializer",
+        "current_user": "users.serializers.CustomUserSerializer",
+    },
+    "PERMISSIONS": {
+        # "user_list": ["rest_framework.permissions.AllowAny"],
+        "user": ["rest_framework.permissions.AllowAny"],
+        "current_user": ["rest_framework.permissions.AllowAny"],
+        # "user_create": ["rest_framework.permissions.AllowAny"],
+        # "user_delete": ["rest_framework.permissions.IsAdminUser"],
+    },
+}
