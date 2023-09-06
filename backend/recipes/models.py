@@ -1,15 +1,18 @@
 from django.db import models
-from users.models import CustomUser
+from users.models import CustomUser as User
 
 
 class Tags(models.Model):
     """Теги."""
 
     name = models.CharField(
-        max_length=256,
         verbose_name="Название тега",
+        max_length=256,
     )
-    color = models.CharField(max_length=16)
+    color = models.CharField(
+        verbose_name="Цвет",
+        max_length=16,
+    )
     slug = models.SlugField(
         max_length=50,
         unique=True,
@@ -17,7 +20,7 @@ class Tags(models.Model):
     )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ("name",)
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
 
@@ -29,14 +32,20 @@ class Ingredients(models.Model):
     """Ингредиенты."""
 
     name = models.CharField(
-        max_length=256,
         verbose_name="Название тега",
+        max_length=256,
     )
-    number = models.CharField(max_length=16)
-    measurement_unit = models.CharField(max_length=16)
+    number = models.CharField(
+        verbose_name="Количество",
+        max_length=16,
+    )
+    measurement_unit = models.CharField(
+        verbose_name="Единица измерения",
+        max_length=16,
+    )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ("name",)
         verbose_name = "Ингридиент"
         verbose_name_plural = "Ингридиенты"
 
@@ -48,18 +57,22 @@ class Recipes(models.Model):
     """Рецепты."""
 
     name = models.CharField(
+        verbose_name="Название блюда",
         max_length=256,
         blank=False,
-        verbose_name="Название блюда",
     )
     author = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         blank=False,
         related_name="users",
         verbose_name="Пользователь",
     )
-    image = models.ImageField(upload_to="data/images/", blank=False)
+    image = models.ImageField(
+        verbose_name="Изображение",
+        upload_to="data/images/",
+        blank=False,
+    )
     text = models.CharField(max_length=255, verbose_name="Описание блюда")
     ingredients = models.ManyToManyField(
         Ingredients,
@@ -87,3 +100,25 @@ class Recipes(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Пользователь",
+        related_name="follower",
+    )
+    following = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Автор",
+        related_name="following",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "following"], name="unique_name_following"
+            )
+        ]
