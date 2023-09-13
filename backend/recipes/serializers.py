@@ -2,10 +2,18 @@ import base64
 
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
-from recipes.models import Follow, Ingredients, Recipes, Tags, TagsInRecipes
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import CustomUser as User
+
+from .models import (
+    Follow,
+    Ingredients,
+    IngredientsInRecipes,
+    Recipes,
+    Tags,
+    TagsInRecipes,
+)
 
 
 class TagsSerializer(serializers.ModelSerializer):
@@ -15,9 +23,38 @@ class TagsSerializer(serializers.ModelSerializer):
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
+    # name = serializers.SlugRelatedField(
+    #    queryset=Ingredients.objects.all(),
+    #    slug_field="name",
+    # )
+
     class Meta:
         model = Ingredients
+        fields = ("id", "name", "measurement_unit")
+
+
+class IngredientsRecipesSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(
+        source="ingredients.id",
+        read_only=True,
+    )
+    # ingredient = serializers.SlugRelatedField(
+    #    queryset=Ingredients.objects.all(),
+    #    slug_field="name",
+    # )
+    name = serializers.CharField(
+        source="ingredients.name",
+        read_only=True,
+    )
+    measurement_unit = serializers.CharField(
+        source="ingredients.measurement_unit",
+        read_only=True,
+    )
+
+    class Meta:
+        model = IngredientsInRecipes
         fields = ("id", "name", "number", "measurement_unit")
+        # read_only_fields = "ingredient"
 
 
 class Base64ImageField(serializers.ImageField):
@@ -35,10 +72,15 @@ class RecipesSerializer(serializers.ModelSerializer):
         slug_field="id",
         default=serializers.CurrentUserDefault(),
     )
-    # ingredients = IngredientsSerializer(
+    ingredients = IngredientsRecipesSerializer(
+        source="recipes_ingredients",
+        many=True,
+        #    read_only=True,
+    )
+    # ingredients = IngredientsRecipesSerializer(
     #    source="recipes_ingredients",
     #    many=True,
-    #    read_only=True,
+    # read_only=True,
     # )
     tags = TagsSerializer(
         # source="recipes_tags",
@@ -55,7 +97,7 @@ class RecipesSerializer(serializers.ModelSerializer):
             "id",
             "tags",
             "author",
-            # "ingredients",
+            "ingredients",
             # "is_favorited",
             # "is_in_shopping_cart",
             "name",
@@ -66,14 +108,26 @@ class RecipesSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         print(self.initial_data["tags"])
+        print(self.initial_data)
         print(validated_data)
-        # Уберем tags из словаря validated_data и сохраним его
-        # tags = validated_data.pop("tags")
-
-        # Создадим рецепт пока без тега
+        ingredients = validated_data.pop("recipes_ingredients")
+        # Уберем ingredients из словаря validated_data и сохраним его
+        # Создадим рецепт пока без ingredients
         recipe = Recipes.objects.create(**validated_data)
 
-        #
+        for ingredient in ingredients:
+            try:
+                current_ingredient = ingredient.get("ingredient")
+                # current_ingredient = Ingredients.objects.get(name=ingredient)
+                number = ingredient.get("number")
+                IngredientsInRecipes.objects.create(
+                    ingredient=current_ingredient,
+                    recipe=recipe,
+                    number=number,
+                )
+            except Ingredients.DoesNotExist:
+                pass
+
         for tag in self.initial_data["tags"]:
             try:
                 current_tag = Tags.objects.get(id=tag)

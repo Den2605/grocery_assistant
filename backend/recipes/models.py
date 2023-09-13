@@ -35,10 +35,10 @@ class Ingredients(models.Model):
         verbose_name="Название ингридиента",
         max_length=256,
     )
-    number = models.CharField(
-        verbose_name="Количество",
-        max_length=16,
-    )
+    # number = models.CharField(
+    #    verbose_name="Количество",
+    #    max_length=16,
+    # )
     measurement_unit = models.CharField(
         verbose_name="Единица измерения",
         max_length=16,
@@ -48,6 +48,7 @@ class Ingredients(models.Model):
         ordering = ("name",)
         verbose_name = "Ингридиент"
         verbose_name_plural = "Ингридиенты"
+        # unique_together = ('name', 'measurement_unit')
 
     def __str__(self):
         return self.name
@@ -74,20 +75,20 @@ class Recipes(models.Model):
         blank=False,
     )
     text = models.CharField(max_length=255, verbose_name="Описание блюда")
-    # ingredients = models.ManyToManyField(
-    #    Ingredients,
-    #    related_name="recipes_ingredients",
-    #    # through=
-    #    blank=False,
-    #    verbose_name="Тег",
-    # )
+    ingredients = models.ManyToManyField(
+        Ingredients,
+        related_name="recipes_ingredients",
+        through="IngredientsInRecipes",
+        blank=False,
+        verbose_name="Тег",
+    )
     tags = models.ManyToManyField(
         Tags,
         # on_delete=models.CASCADE,
         # related_name="recipes_tags",
         through="TagsInRecipes",
         blank=False,
-        # verbose_name="Тег",
+        verbose_name="Тег",
     )
     cooking_time = models.IntegerField(
         verbose_name="Время приготовления блюда"
@@ -140,4 +141,21 @@ class TagsInRecipes(models.Model):
     recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
+    )
+
+
+class IngredientsInRecipes(models.Model):
+    """Промежуточная модель Ingredients"""
+
+    ingredient = models.ForeignKey(
+        Ingredients,
+        on_delete=models.CASCADE,
+    )
+    recipe = models.ForeignKey(
+        Recipes,
+        on_delete=models.CASCADE,
+    )
+    number = models.IntegerField(
+        verbose_name="Количество",
+        # max_length=16,
     )
