@@ -32,7 +32,7 @@ class Ingredients(models.Model):
     """Ингредиенты."""
 
     name = models.CharField(
-        verbose_name="Название тега",
+        verbose_name="Название ингридиента",
         max_length=256,
     )
     number = models.CharField(
@@ -65,7 +65,7 @@ class Recipes(models.Model):
         User,
         on_delete=models.CASCADE,
         blank=False,
-        related_name="users",
+        related_name="recipes_user",
         verbose_name="Пользователь",
     )
     image = models.ImageField(
@@ -74,17 +74,20 @@ class Recipes(models.Model):
         blank=False,
     )
     text = models.CharField(max_length=255, verbose_name="Описание блюда")
-    ingredients = models.ManyToManyField(
-        Ingredients,
-        related_name="ingredients",
-        blank=False,
-        verbose_name="Тег",
-    )
+    # ingredients = models.ManyToManyField(
+    #    Ingredients,
+    #    related_name="recipes_ingredients",
+    #    # through=
+    #    blank=False,
+    #    verbose_name="Тег",
+    # )
     tags = models.ManyToManyField(
         Tags,
-        related_name="tags",
+        # on_delete=models.CASCADE,
+        # related_name="recipes_tags",
+        through="TagsInRecipes",
         blank=False,
-        verbose_name="Тег",
+        # verbose_name="Тег",
     )
     cooking_time = models.IntegerField(
         verbose_name="Время приготовления блюда"
@@ -112,13 +115,29 @@ class Follow(models.Model):
     following = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        blank=True,
+        null=True,
         verbose_name="Автор",
-        related_name="following",
+        related_name="follow",
     )
+    is_subscribed = models.BooleanField(default=False)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user", "following"], name="unique_name_following"
-            )
-        ]
+    # class Meta:
+    #    constraints = [
+    #        models.UniqueConstraint(
+    #            fields=["user", "following"], name="unique_name_following"
+    #        )
+    #    ]
+
+
+class TagsInRecipes(models.Model):
+    """Промежуточная модель Tags"""
+
+    tag = models.ForeignKey(
+        Tags,
+        on_delete=models.CASCADE,
+    )
+    recipe = models.ForeignKey(
+        Recipes,
+        on_delete=models.CASCADE,
+    )
