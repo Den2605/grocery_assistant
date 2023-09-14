@@ -34,11 +34,8 @@ class Ingredients(models.Model):
     name = models.CharField(
         verbose_name="Название ингридиента",
         max_length=256,
+        unique=True,
     )
-    # number = models.CharField(
-    #    verbose_name="Количество",
-    #    max_length=16,
-    # )
     measurement_unit = models.CharField(
         verbose_name="Единица измерения",
         max_length=16,
@@ -48,7 +45,7 @@ class Ingredients(models.Model):
         ordering = ("name",)
         verbose_name = "Ингридиент"
         verbose_name_plural = "Ингридиенты"
-        # unique_together = ('name', 'measurement_unit')
+        unique_together = ("name", "measurement_unit")
 
     def __str__(self):
         return self.name
@@ -79,13 +76,13 @@ class Recipes(models.Model):
         Ingredients,
         related_name="recipes_ingredients",
         through="IngredientsInRecipes",
-        blank=False,
-        verbose_name="Тег",
+        # blank=False,
+        verbose_name="Ингридиент",
     )
     tags = models.ManyToManyField(
         Tags,
         # on_delete=models.CASCADE,
-        # related_name="recipes_tags",
+        related_name="recipes_tags",
         through="TagsInRecipes",
         blank=False,
         verbose_name="Тег",
@@ -150,6 +147,7 @@ class IngredientsInRecipes(models.Model):
     ingredient = models.ForeignKey(
         Ingredients,
         on_delete=models.CASCADE,
+        to_field="name",
     )
     recipe = models.ForeignKey(
         Recipes,

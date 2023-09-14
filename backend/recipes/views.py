@@ -9,6 +9,7 @@ from .serializers import (
     FollowSerializer,
     FollowUserSerializer,
     IngredientsSerializer,
+    RecipesReadSerializer,
     RecipesSerializer,
     TagsSerializer,
 )
@@ -30,6 +31,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipes.objects.all()
     serializer_class = RecipesSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return RecipesReadSerializer
+        return RecipesSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

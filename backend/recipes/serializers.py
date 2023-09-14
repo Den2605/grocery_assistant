@@ -23,38 +23,24 @@ class TagsSerializer(serializers.ModelSerializer):
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
-    # name = serializers.SlugRelatedField(
-    #    queryset=Ingredients.objects.all(),
-    #    slug_field="name",
-    # )
-
     class Meta:
         model = Ingredients
         fields = ("id", "name", "measurement_unit")
 
 
 class IngredientsRecipesSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(
-        source="ingredients.id",
-        read_only=True,
-    )
-    # ingredient = serializers.SlugRelatedField(
-    #    queryset=Ingredients.objects.all(),
-    #    slug_field="name",
-    # )
-    name = serializers.CharField(
-        source="ingredients.name",
-        read_only=True,
-    )
     measurement_unit = serializers.CharField(
-        source="ingredients.measurement_unit",
+        source="ingredient.measurement_unit",
+        read_only=True,
+    )
+    id = serializers.IntegerField(
+        source="ingredient.id",
         read_only=True,
     )
 
     class Meta:
         model = IngredientsInRecipes
-        fields = ("id", "name", "number", "measurement_unit")
-        # read_only_fields = "ingredient"
+        fields = ("id", "ingredient", "number", "measurement_unit")
 
 
 class Base64ImageField(serializers.ImageField):
@@ -75,15 +61,8 @@ class RecipesSerializer(serializers.ModelSerializer):
     ingredients = IngredientsRecipesSerializer(
         source="recipes_ingredients",
         many=True,
-        #    read_only=True,
     )
-    # ingredients = IngredientsRecipesSerializer(
-    #    source="recipes_ingredients",
-    #    many=True,
-    # read_only=True,
-    # )
     tags = TagsSerializer(
-        # source="recipes_tags",
         many=True,
         read_only=True,
     )
@@ -107,18 +86,12 @@ class RecipesSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        print(self.initial_data["tags"])
-        print(self.initial_data)
         print(validated_data)
         ingredients = validated_data.pop("recipes_ingredients")
-        # Уберем ingredients из словаря validated_data и сохраним его
-        # Создадим рецепт пока без ingredients
         recipe = Recipes.objects.create(**validated_data)
-
         for ingredient in ingredients:
             try:
                 current_ingredient = ingredient.get("ingredient")
-                # current_ingredient = Ingredients.objects.get(name=ingredient)
                 number = ingredient.get("number")
                 IngredientsInRecipes.objects.create(
                     ingredient=current_ingredient,
@@ -141,6 +114,49 @@ class RecipesSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        author = get_object_or_404(User, id=data["author"])
+        data["author"] = {
+            "email": author.email,
+            "id": author.id,
+            "username": author.username,
+            "first_name": author.first_name,
+            "last_name": author.last_name,
+            # "is_subscribed": data["is_subscribed"],
+            # "recipes": following_recipes,
+            # "recipes_count": recipes_count,
+        }
+        return data
+
+
+class RecipesReadSerializer(serializers.ModelSerializer):
+    ingredients = IngredientsSerializer(
+        many=True,
+    )
+    tags = TagsSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = Recipes
+        fields = (
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            # "is_favorited",
+            # "is_in_shopping_cart",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
+        )
+
+    def to_representation(self, instance):
+        print(instance)
+        data = super().to_representation(instance)
+        print(data)
+        # tags = data["tags"]
         author = get_object_or_404(User, id=data["author"])
         data["author"] = {
             "email": author.email,
