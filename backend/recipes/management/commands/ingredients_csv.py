@@ -1,7 +1,7 @@
 import csv
 
 from django.core.management.base import BaseCommand
-from recipes.models import Ingredients
+from recipes.models import Ingredient
 
 
 class Command(BaseCommand):
@@ -12,7 +12,7 @@ class Command(BaseCommand):
             reader_object = csv.reader(f, delimiter=",")
             # dr = csv.DictReader(f, delimiter=",")
             for row in reader_object:
-                obj = Ingredients(
+                obj = Ingredient(
                     name=row[0],
                     measurement_unit=row[1],
                 )

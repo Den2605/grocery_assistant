@@ -8,11 +8,11 @@ from users.models import CustomUser as User
 
 from .models import (
     Follow,
-    Ingredients,
-    IngredientsInRecipes,
-    Recipes,
-    Tags,
-    TagsInRecipes,
+    Ingredient,
+    IngredientInRecipe,
+    Recipe,
+    Tag,
+    TagInRecipe,
 )
 
 # from users.serializers import CustomUserSerializer
@@ -30,36 +30,47 @@ class AuthorSerializer(serializers.ModelSerializer):
         )
 
 
-class TagsSerializer(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Tags
+        model = Tag
         fields = ("id", "name", "color", "slug")
 
 
-class IngredientsSerializer(serializers.ModelSerializer):
+class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Ingredients
+        model = Ingredient
         fields = ("id", "name", "measurement_unit")
 
 
-class IngredientsRecipesSerializer(serializers.ModelSerializer):
+class IngredientRecipeSerializer(serializers.ModelSerializer):
+    ingredient = serializers.SlugRelatedField(
+        slug_field="name",
+        queryset=Ingredient.objects.all(),
+    )
     id = serializers.IntegerField(
         source="ingredient.id",
         read_only=True,
     )
+    # name = serializers.CharField(
+    #    source="ingredients.name",
+    #    read_only=True,
+    # )
     measurement_unit = serializers.CharField(
         source="ingredient.measurement_unit",
         read_only=True,
     )
 
     class Meta:
-        model = IngredientsInRecipes
+        model = IngredientInRecipe
+        # read_only = "ingredient"
         fields = (
             "id",
             "ingredient",
+            #    "name",
             "number",
             "measurement_unit",
         )
+        read_only_field = "ingredient"
 
 
 class Base64ImageField(serializers.ImageField):
@@ -71,17 +82,17 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class RecipesSerializer(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         queryset=User.objects.all(),
         slug_field="id",
         default=serializers.CurrentUserDefault(),
     )
-    ingredients = IngredientsRecipesSerializer(
-        source="recipes_ingredients",
+    ingredients = IngredientRecipeSerializer(
+        source="recipe_in",
         many=True,
     )
-    tags = TagsSerializer(
+    tags = TagSerializer(
         many=True,
         read_only=True,
     )
@@ -90,7 +101,7 @@ class RecipesSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Recipes
+        model = Recipe
         fields = (
             "id",
             "tags",
@@ -106,33 +117,50 @@ class RecipesSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         print(validated_data)
-        ingredients = validated_data.pop("recipes_ingredients")
-        recipe = Recipes.objects.create(**validated_data)
+        ingredients = validated_data.pop("recipe_in")
+        recipe = Recipe.objects.create(**validated_data)
+        print(">>>")
+        for tag in self.initial_data["tags"]:
+            try:
+                current_tag = Tag.objects.get(id=tag)
+                TagInRecipe.objects.create(
+                    tag=current_tag,
+                    recipe=recipe,
+                )
+            except Tag.DoesNotExist:
+                pass
+        print(">>>")
         for ingredient in ingredients:
             try:
                 current_ingredient = ingredient.get("ingredient")
+                print(current_ingredient)
                 number = ingredient.get("number")
-                IngredientsInRecipes.objects.create(
+                print(ingredient["number"])
+                IngredientInRecipe.objects.create(
                     ingredient=current_ingredient,
                     recipe=recipe,
                     number=number,
                 )
-            except Ingredients.DoesNotExist:
+            except Ingredient.DoesNotExist:
                 pass
-
-        for tag in self.initial_data["tags"]:
-            try:
-                current_tag = Tags.objects.get(id=tag)
-                TagsInRecipes.objects.create(
-                    tag=current_tag,
-                    recipe=recipe,
-                )
-            except Tags.DoesNotExist:
-                pass
+        print(validated_data)
         return recipe
+
+    def update(self, instance, validated_data):
+        instance.author = validated_data.get("author", instance.author)
+        instance.name = validated_data.get("name", instance.name)
+        instance.image = validated_data.get("image", instance.image)
+        instance.text = validated_data.get("text", instance.text)
+        instance.cooking_time = validated_data.get(
+            "cooking_time", instance.cooking_time
+        )
+        instance.save()
+        return instance
+        # return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        print(data)
         author = get_object_or_404(User, id=data["author"])
         data["author"] = {
             "email": author.email,
@@ -145,77 +173,6 @@ class RecipesSerializer(serializers.ModelSerializer):
             # "recipes_count": recipes_count,
         }
         return data
-
-
-class IngredientsRecipesReadSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(
-        source="ingredient.id",
-        read_only=True,
-    )
-    measurement_unit = serializers.CharField(
-        source="ingredient.measurement_unit",
-        read_only=True,
-    )
-    ingredient = serializers.CharField(
-        source="ingredient.name",
-        read_only=True,
-    )
-    number = serializers.IntegerField(
-        source="ingredient.number",
-        read_only=True,
-    )
-
-    class Meta:
-        model = IngredientsInRecipes
-        # fields = "__all__"
-        fields = ["id", "ingredient", "number", "measurement_unit"]
-
-
-class RecipesReadSerializer(serializers.ModelSerializer):
-    ingredients = IngredientsSerializer(
-        many=True,
-        read_only=True,
-    )
-    tags = TagsSerializer(
-        many=True,
-        read_only=True,
-    )
-    author = AuthorSerializer()
-
-    class Meta:
-        model = Recipes
-        fields = "__all__"
-
-    def get_ingredients(self, obj):
-        ingredients = IngredientsInRecipes.objects.filter(recipe=obj)
-        return ingredients[0]
-        # return [ingredient.ingredient for ingredient in ingredients]
-
-
-# class RecipesReadSerializer(serializers.ModelSerializer):
-#    author = AuthorSerializer()
-#    ingredients = IngredientsSerializer(
-#        many=True,
-#    )
-#    tags = TagsSerializer(
-#        many=True,
-#        read_only=True,
-#    )
-
-#    class Meta:
-#        model = Recipes
-#        fields = (
-#            "id",
-#            "tags",
-#            "author",
-#            "ingredients",
-#            # "is_favorited",
-# "is_in_shopping_cart",
-#            "name",
-#            "image",
-#            "text",
-#            "cooking_time",
-#        )
 
 
 class FollowUserSerializer(serializers.ModelSerializer):
@@ -241,7 +198,7 @@ class FollowSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         following = get_object_or_404(User, id=data["following"])
-        following_recipes = Recipes.objects.filter(author=following.id)
+        following_recipes = Recipe.objects.filter(author=following.id)
         recipes_count = len(following_recipes)
         data = {
             "email": following.email,

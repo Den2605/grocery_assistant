@@ -4,38 +4,43 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.models import CustomUser as User
 
-from .models import Follow, Ingredients, Recipes, Tags
+from .models import Follow, Ingredient, IngredientInRecipe, Recipe, Tag
 from .serializers import (
-    FollowSerializer,
+    FollowSerializer,  # RecipeReadSerializer,
     FollowUserSerializer,
-    IngredientsSerializer,
-    RecipesReadSerializer,
-    RecipesSerializer,
-    TagsSerializer,
+    IngredientSerializer,
+    RecipeSerializer,
+    TagSerializer,
 )
 
 
 class TagsViewSet(viewsets.ModelViewSet):
-    queryset = Tags.objects.all()
-    serializer_class = TagsSerializer
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class IngredientsViewSet(viewsets.ModelViewSet):
-    queryset = Ingredients.objects.all()
-    serializer_class = IngredientsSerializer
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
-    queryset = Recipes.objects.all()
-    serializer_class = RecipesSerializer
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return RecipesReadSerializer
-        return RecipesSerializer
+    # def get_serializer_class(self):
+    #    if self.request.method == "GET":
+    #        return RecipesReadSerializer
+    #    return RecipesSerializer
+
+    # def get_ingredients(self, obj):
+    #    ingredients = IngredientsInRecipes.objects.filter(recipe=obj)
+    #    print(">>>")
+    #    print(ingredients[0].get("number"))
+    #    return [ingredient.ingredient for ingredient in ingredients]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

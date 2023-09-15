@@ -2,7 +2,7 @@ from django.db import models
 from users.models import CustomUser as User
 
 
-class Tags(models.Model):
+class Tag(models.Model):
     """Теги."""
 
     name = models.CharField(
@@ -28,7 +28,7 @@ class Tags(models.Model):
         return self.name
 
 
-class Ingredients(models.Model):
+class Ingredient(models.Model):
     """Ингредиенты."""
 
     name = models.CharField(
@@ -51,7 +51,7 @@ class Ingredients(models.Model):
         return self.name
 
 
-class Recipes(models.Model):
+class Recipe(models.Model):
     """Рецепты."""
 
     name = models.CharField(
@@ -73,17 +73,17 @@ class Recipes(models.Model):
     )
     text = models.CharField(max_length=255, verbose_name="Описание блюда")
     ingredients = models.ManyToManyField(
-        Ingredients,
-        related_name="recipes_ingredients",
-        through="IngredientsInRecipes",
+        Ingredient,
+        related_name="recipe_ingredient",
+        through="IngredientInRecipe",
         # blank=False,
         verbose_name="Ингридиент",
     )
     tags = models.ManyToManyField(
-        Tags,
+        Tag,
         # on_delete=models.CASCADE,
-        related_name="recipes_tags",
-        through="TagsInRecipes",
+        related_name="recipe_tag",
+        through="TagInRecipe",
         blank=False,
         verbose_name="Тег",
     )
@@ -128,30 +128,30 @@ class Follow(models.Model):
     #    ]
 
 
-class TagsInRecipes(models.Model):
+class TagInRecipe(models.Model):
     """Промежуточная модель Tags"""
 
     tag = models.ForeignKey(
-        Tags,
+        Tag,
         on_delete=models.CASCADE,
     )
     recipe = models.ForeignKey(
-        Recipes,
+        Recipe,
         on_delete=models.CASCADE,
     )
 
 
-class IngredientsInRecipes(models.Model):
+class IngredientInRecipe(models.Model):
     """Промежуточная модель Ingredients"""
 
     ingredient = models.ForeignKey(
-        Ingredients,
+        Ingredient,
         on_delete=models.CASCADE,
         to_field="name",
         related_name="ingredient_in",
     )
     recipe = models.ForeignKey(
-        Recipes,
+        Recipe,
         on_delete=models.CASCADE,
         related_name="recipe_in",
     )
