@@ -148,10 +148,12 @@ class IngredientsInRecipes(models.Model):
         Ingredients,
         on_delete=models.CASCADE,
         to_field="name",
+        related_name="ingredient_in",
     )
     recipe = models.ForeignKey(
         Recipes,
         on_delete=models.CASCADE,
+        related_name="recipe_in",
     )
     number = models.IntegerField(
         verbose_name="Количество",

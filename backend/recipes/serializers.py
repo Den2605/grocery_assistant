@@ -15,6 +15,20 @@ from .models import (
     TagsInRecipes,
 )
 
+# from users.serializers import CustomUserSerializer
+
+
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+        )
+
 
 class TagsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,18 +43,23 @@ class IngredientsSerializer(serializers.ModelSerializer):
 
 
 class IngredientsRecipesSerializer(serializers.ModelSerializer):
-    measurement_unit = serializers.CharField(
-        source="ingredient.measurement_unit",
-        read_only=True,
-    )
     id = serializers.IntegerField(
         source="ingredient.id",
+        read_only=True,
+    )
+    measurement_unit = serializers.CharField(
+        source="ingredient.measurement_unit",
         read_only=True,
     )
 
     class Meta:
         model = IngredientsInRecipes
-        fields = ("id", "ingredient", "number", "measurement_unit")
+        fields = (
+            "id",
+            "ingredient",
+            "number",
+            "measurement_unit",
+        )
 
 
 class Base64ImageField(serializers.ImageField):
@@ -128,47 +147,75 @@ class RecipesSerializer(serializers.ModelSerializer):
         return data
 
 
+class IngredientsRecipesReadSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(
+        source="ingredient.id",
+        read_only=True,
+    )
+    measurement_unit = serializers.CharField(
+        source="ingredient.measurement_unit",
+        read_only=True,
+    )
+    ingredient = serializers.CharField(
+        source="ingredient.name",
+        read_only=True,
+    )
+    number = serializers.IntegerField(
+        source="ingredient.number",
+        read_only=True,
+    )
+
+    class Meta:
+        model = IngredientsInRecipes
+        # fields = "__all__"
+        fields = ["id", "ingredient", "number", "measurement_unit"]
+
+
 class RecipesReadSerializer(serializers.ModelSerializer):
     ingredients = IngredientsSerializer(
         many=True,
+        read_only=True,
     )
     tags = TagsSerializer(
         many=True,
         read_only=True,
     )
+    author = AuthorSerializer()
 
     class Meta:
         model = Recipes
-        fields = (
-            "id",
-            "tags",
-            "author",
-            "ingredients",
-            # "is_favorited",
-            # "is_in_shopping_cart",
-            "name",
-            "image",
-            "text",
-            "cooking_time",
-        )
+        fields = "__all__"
 
-    def to_representation(self, instance):
-        print(instance)
-        data = super().to_representation(instance)
-        print(data)
-        # tags = data["tags"]
-        author = get_object_or_404(User, id=data["author"])
-        data["author"] = {
-            "email": author.email,
-            "id": author.id,
-            "username": author.username,
-            "first_name": author.first_name,
-            "last_name": author.last_name,
-            # "is_subscribed": data["is_subscribed"],
-            # "recipes": following_recipes,
-            # "recipes_count": recipes_count,
-        }
-        return data
+    def get_ingredients(self, obj):
+        ingredients = IngredientsInRecipes.objects.filter(recipe=obj)
+        return ingredients[0]
+        # return [ingredient.ingredient for ingredient in ingredients]
+
+
+# class RecipesReadSerializer(serializers.ModelSerializer):
+#    author = AuthorSerializer()
+#    ingredients = IngredientsSerializer(
+#        many=True,
+#    )
+#    tags = TagsSerializer(
+#        many=True,
+#        read_only=True,
+#    )
+
+#    class Meta:
+#        model = Recipes
+#        fields = (
+#            "id",
+#            "tags",
+#            "author",
+#            "ingredients",
+#            # "is_favorited",
+# "is_in_shopping_cart",
+#            "name",
+#            "image",
+#            "text",
+#            "cooking_time",
+#        )
 
 
 class FollowUserSerializer(serializers.ModelSerializer):
