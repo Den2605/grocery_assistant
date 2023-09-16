@@ -1,14 +1,17 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Follow, Ingredient, Recipe, Tag
+from .models import Basket, Follow, Ingredient, Recipe, Tag
 from .permissions import AuthorOrReadOnly
 from .serializers import (
     FollowSerializer,
     FollowUserSerializer,
     IngredientSerializer,
     RecipeSerializer,
+    Shoppincart,
     TagSerializer,
 )
 
@@ -28,19 +31,38 @@ class IngredientsViewSet(viewsets.ModelViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     permission_classes = (AuthorOrReadOnly,)
-
-    # def get_serializer_class(self):
-    #    if self.request.method == "GET":
-    #        return RecipesReadSerializer
-    #    return RecipesSerializer
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
         return super().perform_create(serializer)
+
+    @action(
+        detail=True,
+        methods=["post", "delete"],
+        permission_classes=(permissions.IsAuthenticated,),
+    )
+    def shopping_cart(self, request, pk=None):
+        user = request.user.id
+        if request.method == "DELETE":
+            basket = Basket.objects.get(user=user, recipe=pk)
+            # Basket.objects.all().delete()
+            basket.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        recipe = get_object_or_404(Recipe, id=pk)
+        serializer = Shoppincart(
+            data={
+                "user": user,
+                "recipe": pk,
+                "name": recipe.name,
+                "image": recipe.image,
+                "cooking_time": recipe.cooking_time,
+            },
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FollowAPIView(APIView):

@@ -19,6 +19,13 @@ router.register(r"ingredients", IngredientsViewSet, basename="ingredients")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path(
+        "recipes/<int:pk>/shopping_cart/",
+        RecipesViewSet.as_view(
+            {"post": "shopping_cart", "delete": "shopping_cart"}
+        ),
+        name="recipes_shopping_cart",
+    ),
     path("users/subscriptions/", FollowAPIView.as_view()),
     path("users/<int:id>/subscribe/", FollowAPIView.as_view()),
     path("", include("djoser.urls")),

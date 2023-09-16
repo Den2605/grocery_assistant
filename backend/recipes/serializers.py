@@ -8,6 +8,7 @@ from users.models import CustomUser as User
 
 from .models import (
     Basket,
+    Favorite,
     Follow,
     Ingredient,
     IngredientInRecipe,
@@ -100,6 +101,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         required=True,
     )
     is_in_shopping_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -108,7 +110,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             "tags",
             "author",
             "ingredients",
-            # "is_favorited",
+            "is_favorited",
             "is_in_shopping_cart",
             "name",
             "image",
@@ -121,6 +123,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         user = request.user
         if request.method == "GET" or "PATCH":
             if Basket.objects.filter(user=user.id, recipe=obj.id).exists():
+                return True
+            return False
+        return False
+
+    def get_is_favorited(self, obj):
+        request = self.context.get("request")
+        user = request.user
+        if request.method == "GET" or "PATCH":
+            if Favorite.objects.filter(user=user.id, recipe=obj.id).exists():
                 return True
             return False
         return False
@@ -217,3 +228,24 @@ class FollowSerializer(serializers.ModelSerializer):
             queryset=Follow.objects.all(), fields=("user", "following")
         )
     ]
+
+
+class Shoppincart(serializers.ModelSerializer):
+    name = serializers.CharField(source="recipe.name")
+    image = Base64ImageField(source="recipe.image")
+    cooking_time = serializers.IntegerField(source="recipe.cooking_time")
+
+    class Meta:
+        model = Basket
+        fields = ("id", "name", "image", "cooking_time", "recipe", "user")
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Basket.objects.all(), fields=("user", "recipe")
+            )
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        del data["recipe"]
+        del data["user"]
+        return data

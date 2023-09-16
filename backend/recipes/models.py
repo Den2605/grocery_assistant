@@ -162,6 +162,8 @@ class IngredientInRecipe(models.Model):
 
 
 class Basket(models.Model):
+    """Список покупок."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -173,4 +175,28 @@ class Basket(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Рецепт",
         related_name="recipe",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"], name="unique_name_recipe"
+            )
+        ]
+
+
+class Favorite(models.Model):
+    """Избранные рецепты."""
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Пользователь",
+        related_name="user_favorite",
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name="Рецепт",
+        related_name="recipe_favorite",
     )
