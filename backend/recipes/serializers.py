@@ -7,6 +7,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from users.models import CustomUser as User
 
 from .models import (
+    Basket,
     Follow,
     Ingredient,
     IngredientInRecipe,
@@ -98,6 +99,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField(
         required=True,
     )
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -107,12 +109,21 @@ class RecipeSerializer(serializers.ModelSerializer):
             "author",
             "ingredients",
             # "is_favorited",
-            # "is_in_shopping_cart",
+            "is_in_shopping_cart",
             "name",
             "image",
             "text",
             "cooking_time",
         )
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get("request")
+        user = request.user
+        if request.method == "GET" or "PATCH":
+            if Basket.objects.filter(user=user.id, recipe=obj.id).exists():
+                return True
+            return False
+        return False
 
     def create(self, validated_data):
         ingredients = validated_data.pop("recipe_in")
@@ -160,8 +171,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             "first_name": author.first_name,
             "last_name": author.last_name,
             # "is_subscribed": data["is_subscribed"],
-            # "recipes": following_recipes,
-            # "recipes_count": recipes_count,
         }
         return data
 

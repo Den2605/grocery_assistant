@@ -159,3 +159,18 @@ class IngredientInRecipe(models.Model):
         verbose_name="Количество",
         # max_length=16,
     )
+
+
+class Basket(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="Пользователь",
+        related_name="user",
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name="Рецепт",
+        related_name="recipe",
+    )
