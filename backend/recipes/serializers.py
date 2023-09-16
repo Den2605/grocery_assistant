@@ -62,7 +62,6 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientInRecipe
-        # read_only = "ingredient"
         fields = (
             "id",
             "ingredient",
@@ -116,10 +115,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        print(validated_data)
         ingredients = validated_data.pop("recipe_in")
         recipe = Recipe.objects.create(**validated_data)
-        print(">>>")
         for tag in self.initial_data["tags"]:
             try:
                 current_tag = Tag.objects.get(id=tag)
@@ -129,13 +126,10 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
             except Tag.DoesNotExist:
                 pass
-        print(">>>")
         for ingredient in ingredients:
             try:
                 current_ingredient = ingredient.get("ingredient")
-                print(current_ingredient)
                 number = ingredient.get("number")
-                print(ingredient["number"])
                 IngredientInRecipe.objects.create(
                     ingredient=current_ingredient,
                     recipe=recipe,
@@ -143,7 +137,6 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
             except Ingredient.DoesNotExist:
                 pass
-        print(validated_data)
         return recipe
 
     def update(self, instance, validated_data):
@@ -156,11 +149,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
         instance.save()
         return instance
-        # return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        print(data)
         author = get_object_or_404(User, id=data["author"])
         data["author"] = {
             "email": author.email,
