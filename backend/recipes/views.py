@@ -1,10 +1,11 @@
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Basket, Follow, Ingredient, Recipe, Tag
+from .models import Basket, Follow, Ingredient, IngredientInRecipe, Recipe, Tag
 from .permissions import AuthorOrReadOnly
 from .serializers import (
     FollowSerializer,
@@ -63,6 +64,47 @@ class RecipesViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        permission_classes=(permissions.IsAuthenticated,),
+    )
+    def download_shopping_cart(self, request):
+        # получаем корзину пользователя
+        basket = Basket.objects.filter(user=request.user)
+        products = dict()
+        # получаем ингридиенты из рецептов и добавляем их в список
+        if basket:
+            for recipe in basket:
+                ingredients = IngredientInRecipe.objects.filter(
+                    recipe=recipe.recipe.id
+                ).values(
+                    "ingredient__name",
+                    "number",
+                    "ingredient__measurement_unit",
+                )
+                for ingredient in ingredients:
+                    name = ingredient["ingredient__name"]
+                    number = ingredient["number"]
+                    measurement_unit = ingredient[
+                        "ingredient__measurement_unit"
+                    ]
+                    if name in products.keys():
+                        last_number = products[name][0]
+                        products[name] = [
+                            number + last_number,
+                            measurement_unit,
+                        ]
+                    else:
+                        products[name] = [number, measurement_unit]
+            content = ""
+            for k, v in products.items():
+                product = f"Наименование: {k}, количество: {v[0]}, {v[1]}.\n"
+                content += product
+            return HttpResponse(content, content_type="text/plain")
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FollowAPIView(APIView):
