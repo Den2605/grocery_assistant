@@ -230,7 +230,7 @@ class FollowSerializer(serializers.ModelSerializer):
     ]
 
 
-class Shoppincart(serializers.ModelSerializer):
+class ShoppincartSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="recipe.name")
     image = Base64ImageField(source="recipe.image")
     cooking_time = serializers.IntegerField(source="recipe.cooking_time")
@@ -241,6 +241,27 @@ class Shoppincart(serializers.ModelSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=Basket.objects.all(), fields=("user", "recipe")
+            )
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        del data["recipe"]
+        del data["user"]
+        return data
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="recipe.name")
+    image = Base64ImageField(source="recipe.image")
+    cooking_time = serializers.IntegerField(source="recipe.cooking_time")
+
+    class Meta:
+        model = Favorite
+        fields = ("id", "name", "image", "cooking_time", "recipe", "user")
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(), fields=("user", "recipe")
             )
         ]
 

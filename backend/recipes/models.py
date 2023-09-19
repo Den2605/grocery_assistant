@@ -180,7 +180,7 @@ class Basket(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "recipe"], name="unique_name_recipe"
+                fields=["user", "recipe"], name="unique_name_basket_recipe"
             )
         ]
 
@@ -200,3 +200,10 @@ class Favorite(models.Model):
         verbose_name="Рецепт",
         related_name="recipe_favorite",
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"], name="unique_name_favorite_recipe"
+            )
+        ]

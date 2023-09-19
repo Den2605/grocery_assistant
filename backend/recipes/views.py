@@ -5,14 +5,23 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Basket, Follow, Ingredient, IngredientInRecipe, Recipe, Tag
+from .models import (
+    Basket,
+    Favorite,
+    Follow,
+    Ingredient,
+    IngredientInRecipe,
+    Recipe,
+    Tag,
+)
 from .permissions import AuthorOrReadOnly
 from .serializers import (
+    FavoriteSerializer,
     FollowSerializer,
     FollowUserSerializer,
     IngredientSerializer,
     RecipeSerializer,
-    Shoppincart,
+    ShoppincartSerializer,
     TagSerializer,
 )
 
@@ -46,13 +55,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         user = request.user.id
         if request.method == "DELETE":
-            basket = Basket.objects.get(user=user, recipe=pk)
-            # Basket.objects.all().delete()
+            basket = get_object_or_404(Basket, user=user, recipe=pk)
             basket.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         recipe = get_object_or_404(Recipe, id=pk)
-        serializer = Shoppincart(
+        serializer = ShoppincartSerializer(
             data={
                 "user": user,
                 "recipe": pk,
@@ -105,6 +113,32 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return HttpResponse(content, content_type="text/plain")
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=True,
+        methods=["post", "delete"],
+        permission_classes=(permissions.IsAuthenticated,),
+    )
+    def favorite(self, request, pk=None):
+        user = request.user.id
+        if request.method == "DELETE":
+            favorite_recipe = get_object_or_404(Favorite, user=user, recipe=pk)
+            favorite_recipe.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        recipe = get_object_or_404(Recipe, id=pk)
+        serializer = FavoriteSerializer(
+            data={
+                "user": user,
+                "recipe": pk,
+                "name": recipe.name,
+                "image": recipe.image,
+                "cooking_time": recipe.cooking_time,
+            },
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FollowAPIView(APIView):
