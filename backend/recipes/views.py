@@ -4,6 +4,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from users.models import CustomUser as User
 
 from .models import (
     Basket,
@@ -16,10 +17,12 @@ from .models import (
 )
 from .permissions import AuthorOrReadOnly
 from .serializers import (
+    AuthorSerializer,
     FavoriteSerializer,
     FollowSerializer,
     FollowUserSerializer,
     IngredientSerializer,
+    RecipeFollowSerializer,
     RecipeSerializer,
     ShoppincartSerializer,
     TagSerializer,
@@ -79,10 +82,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
-        # получаем корзину пользователя
         basket = Basket.objects.filter(user=request.user)
         products = dict()
-        # получаем ингридиенты из рецептов и добавляем их в список
         if basket:
             for recipe in basket:
                 ingredients = IngredientInRecipe.objects.filter(
@@ -142,24 +143,37 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
 
 class FollowAPIView(APIView):
-    def get(self, request):
-        user = self.request.user.id
-        # user = get_object_or_404(User, id=user)
-        followings = Follow.objects.filter(user=user)
-        print(followings)
-        serializer = FollowUserSerializer(followings, many=True)
-        # users = User.objects.filter(id=followings)
-        # serializer = FollowUserSerializer(users, many=True)
-        return Response(serializer.data)
+    # def get(self, request):
+    #    user = self.request.user.id
+    #    # user = get_object_or_404(User, id=user)
+    #    followings = Follow.objects.filter(user=user)
+    #    print(followings)
+    #    serializer = FollowUserSerializer(followings, many=True)
+    #    # users = User.objects.filter(id=followings)
+    #    # serializer = FollowUserSerializer(users, many=True)
+    #    return Response(serializer.data)
 
-    def post(self, request, id):
-        data = {}
-        data["user"] = request.user.id
-        data["following"] = id
-        serializer = FollowSerializer(data=data)
+    def post(self, request, pk):
+        user_id = self.request.user.id
+        # following = get_object_or_404(User, id=pk)
+        # recipes = Recipe.objects.filter(author=pk).values_list("id", flat=True)
+        # recipes_id = list(recipes)
+        # recipes = Recipe.objects.filter(author=pk)
+        # print(recipes[0])
+        serializer = FollowSerializer(
+            data={
+                "user": user_id,
+                "following": pk,
+                # "recipes": recipes_id,
+            }
+        )
+
         if serializer.is_valid():
             serializer.save(is_subscribed=True)
-            # serializer = FollowUserSerializer(get_object_or_404(User, id=id))
+            serializer = AuthorSerializer(get_object_or_404(User, id=pk))
+            # serializer = RecipeFollowSerializer(
+            #    Recipe.objects.filter(author=pk), many=True
+            # )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -20,18 +20,6 @@ from .models import (
 # from users.serializers import CustomUserSerializer
 
 
-class AuthorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-        )
-
-
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
@@ -181,53 +169,8 @@ class RecipeSerializer(serializers.ModelSerializer):
             "username": author.username,
             "first_name": author.first_name,
             "last_name": author.last_name,
-            # "is_subscribed": data["is_subscribed"],
         }
         return data
-
-
-class FollowUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Follow
-        fields = ("following",)
-
-
-class FollowSerializer(serializers.ModelSerializer):
-    following = serializers.SlugRelatedField(
-        queryset=User.objects.all(), slug_field="id"
-    )
-    user = serializers.SlugRelatedField(
-        queryset=User.objects.all(),
-        slug_field="id",
-        default=serializers.CurrentUserDefault(),
-    )
-
-    class Meta:
-        model = Follow
-        fields = ("id", "user", "following", "is_subscribed")
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        following = get_object_or_404(User, id=data["following"])
-        following_recipes = Recipe.objects.filter(author=following.id)
-        recipes_count = len(following_recipes)
-        data = {
-            "email": following.email,
-            "id": following.id,
-            "username": following.username,
-            "first_name": following.first_name,
-            "last_name": following.last_name,
-            "is_subscribed": data["is_subscribed"],
-            "recipes": following_recipes,
-            "recipes_count": recipes_count,
-        }
-        return data
-
-    validators = [
-        UniqueTogetherValidator(
-            queryset=Follow.objects.all(), fields=("user", "following")
-        )
-    ]
 
 
 class ShoppincartSerializer(serializers.ModelSerializer):
@@ -269,4 +212,78 @@ class FavoriteSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         del data["recipe"]
         del data["user"]
+        return data
+
+
+class FollowUserSerializer(serializers.ModelSerializer):
+    # following = AuthorSerializer(many=True)
+
+    class Meta:
+        model = Follow
+        fields = ("following",)
+
+
+class RecipeFollowSerializer(serializers.ModelSerializer):
+    ingredients = IngredientRecipeSerializer(
+        source="recipe_in",
+        many=True,
+    )
+    tags = TagSerializer(
+        many=True,
+        read_only=True,
+    )
+    image = Base64ImageField(
+        required=True,
+    )
+
+    class Meta:
+        model = Recipe
+        fields = (
+            "id",
+            "tags",
+            # "author",
+            "ingredients",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
+        )
+
+
+class FollowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields = (
+            "id",
+            "user",
+            "following",
+            "is_subscribed",
+        )
+
+    # validators = [
+    #    UniqueTogetherValidator(
+    #        queryset=Follow.objects.all(), fields=("user", "following")
+    #    )
+    # ]
+
+
+class AuthorSerializer(serializers.ModelSerializer):
+    recipes = RecipeFollowSerializer(many=True, source="recipes_user")
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "recipes",
+        )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        recipes_count = len(Recipe.objects.filter(author=data["id"]))
+        data["recipes_count"] = recipes_count
+        data["is_subscribe"] = True
         return data
