@@ -120,12 +120,12 @@ class Follow(models.Model):
     )
     is_subscribed = models.BooleanField(default=False)
 
-    # class Meta:
-    #    constraints = [
-    #        models.UniqueConstraint(
-    #            fields=["user", "following"], name="unique_name_following"
-    #        )
-    #    ]
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "following"], name="unique_name_following"
+            )
+        ]
 
 
 class TagInRecipe(models.Model):

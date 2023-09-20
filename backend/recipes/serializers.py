@@ -243,6 +243,13 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    def validate_following(self, value):
+        if value.id == self.initial_data["user"]:
+            raise serializers.ValidationError(
+                "Нельзя подписаться на самого себя."
+            )
+        return value
+
     class Meta:
         model = Follow
         fields = (
@@ -251,12 +258,11 @@ class FollowSerializer(serializers.ModelSerializer):
             "following",
             "is_subscribed",
         )
-
-    # validators = [
-    #    UniqueTogetherValidator(
-    #        queryset=Follow.objects.all(), fields=("user", "following")
-    #    )
-    # ]
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Follow.objects.all(), fields=("user", "following")
+            )
+        ]
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -294,34 +300,3 @@ class AuthorGetSerializer(serializers.ModelSerializer):
             "last_name",
             "recipes",
         )
-
-
-class FollowUserSerializer(serializers.ModelSerializer):
-    # following = AuthorGetSerializer(many=True)
-
-    class Meta:
-        model = Follow
-        fields = ("following",)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        # print(instance)
-        # print(data["following"])
-        following_user = get_object_or_404(User, id=data["following"])
-        # recipes = Recipe.objects.filter(author=data["following"])
-        # print(recipes)
-
-        data["following"] = {
-            "email": following_user.email,
-            "id": following_user.id,
-            "username": following_user.username,
-            "first_name": following_user.first_name,
-            "last_name": following_user.last_name,
-            # "recipes": recipes,
-        }
-        # data["recipes"] = recipes
-
-        # recipes_count = len(Recipe.objects.filter(author=data["id"]))
-        # data["recipes_count"] = recipes_count
-        # data["is_subscribe"] = True
-        return data

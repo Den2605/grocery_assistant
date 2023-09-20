@@ -21,9 +21,7 @@ from .serializers import (
     AuthorSerializer,
     FavoriteSerializer,
     FollowSerializer,
-    FollowUserSerializer,
     IngredientSerializer,
-    RecipeFollowSerializer,
     RecipeSerializer,
     ShoppincartSerializer,
     TagSerializer,
@@ -154,7 +152,6 @@ class FollowAPIView(APIView):
             follow_users.append(get_object_or_404(User, id=number))
 
         serializer = AuthorGetSerializer(follow_users, many=True)
-        # serializer = FollowUserSerializer(follow, many=True)
         return Response(serializer.data)
 
     def post(self, request, pk):
@@ -171,15 +168,15 @@ class FollowAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, id):
+    def delete(self, request, pk):
         condition = Follow.objects.filter(
             user=request.user.id,
-            following=id,
+            following=pk,
         ).exists()
         if condition:
             Follow.objects.filter(
                 user=request.user.id,
-                following=id,
+                following=pk,
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
