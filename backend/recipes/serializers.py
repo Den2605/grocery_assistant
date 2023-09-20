@@ -215,14 +215,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
         return data
 
 
-class FollowUserSerializer(serializers.ModelSerializer):
-    # following = AuthorSerializer(many=True)
-
-    class Meta:
-        model = Follow
-        fields = ("following",)
-
-
 class RecipeFollowSerializer(serializers.ModelSerializer):
     ingredients = IngredientRecipeSerializer(
         source="recipe_in",
@@ -286,4 +278,50 @@ class AuthorSerializer(serializers.ModelSerializer):
         recipes_count = len(Recipe.objects.filter(author=data["id"]))
         data["recipes_count"] = recipes_count
         data["is_subscribe"] = True
+        return data
+
+
+class AuthorGetSerializer(serializers.ModelSerializer):
+    recipes = RecipeFollowSerializer(many=True, source="recipes_user")
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "recipes",
+        )
+
+
+class FollowUserSerializer(serializers.ModelSerializer):
+    # following = AuthorGetSerializer(many=True)
+
+    class Meta:
+        model = Follow
+        fields = ("following",)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # print(instance)
+        # print(data["following"])
+        following_user = get_object_or_404(User, id=data["following"])
+        # recipes = Recipe.objects.filter(author=data["following"])
+        # print(recipes)
+
+        data["following"] = {
+            "email": following_user.email,
+            "id": following_user.id,
+            "username": following_user.username,
+            "first_name": following_user.first_name,
+            "last_name": following_user.last_name,
+            # "recipes": recipes,
+        }
+        # data["recipes"] = recipes
+
+        # recipes_count = len(Recipe.objects.filter(author=data["id"]))
+        # data["recipes_count"] = recipes_count
+        # data["is_subscribe"] = True
         return data

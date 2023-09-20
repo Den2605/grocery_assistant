@@ -17,6 +17,7 @@ from .models import (
 )
 from .permissions import AuthorOrReadOnly
 from .serializers import (
+    AuthorGetSerializer,
     AuthorSerializer,
     FavoriteSerializer,
     FollowSerializer,
@@ -143,37 +144,30 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
 
 class FollowAPIView(APIView):
-    # def get(self, request):
-    #    user = self.request.user.id
-    #    # user = get_object_or_404(User, id=user)
-    #    followings = Follow.objects.filter(user=user)
-    #    print(followings)
-    #    serializer = FollowUserSerializer(followings, many=True)
-    #    # users = User.objects.filter(id=followings)
-    #    # serializer = FollowUserSerializer(users, many=True)
-    #    return Response(serializer.data)
+    def get(self, request):
+        user = self.request.user.id
+        follow_list = Follow.objects.filter(user=user).values_list(
+            "following_id", flat=True
+        )
+        follow_users = []
+        for number in follow_list:
+            follow_users.append(get_object_or_404(User, id=number))
+
+        serializer = AuthorGetSerializer(follow_users, many=True)
+        # serializer = FollowUserSerializer(follow, many=True)
+        return Response(serializer.data)
 
     def post(self, request, pk):
         user_id = self.request.user.id
-        # following = get_object_or_404(User, id=pk)
-        # recipes = Recipe.objects.filter(author=pk).values_list("id", flat=True)
-        # recipes_id = list(recipes)
-        # recipes = Recipe.objects.filter(author=pk)
-        # print(recipes[0])
         serializer = FollowSerializer(
             data={
                 "user": user_id,
                 "following": pk,
-                # "recipes": recipes_id,
             }
         )
-
         if serializer.is_valid():
             serializer.save(is_subscribed=True)
             serializer = AuthorSerializer(get_object_or_404(User, id=pk))
-            # serializer = RecipeFollowSerializer(
-            #    Recipe.objects.filter(author=pk), many=True
-            # )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
