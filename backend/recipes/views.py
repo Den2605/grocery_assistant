@@ -27,14 +27,25 @@ from .serializers import (
 )
 from users.models import CustomUser as User
 
+# class TagsViewSet(viewsets.ModelViewSet):
+#    queryset = Tag.objects.all()
+#    serializer_class = TagSerializer
+#    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-class TagsViewSet(viewsets.ModelViewSet):
+
+class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
-class IngredientsViewSet(viewsets.ModelViewSet):
+# class IngredientsViewSet(viewsets.ModelViewSet):
+#    queryset = Ingredient.objects.all()
+#    serializer_class = IngredientSerializer
+#    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

@@ -1,7 +1,6 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -71,11 +70,6 @@ class Base64ImageField(serializers.ImageField):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    # author = serializers.SlugRelatedField(
-    #    queryset=User.objects.all(),
-    #    slug_field="id",
-    #    default=serializers.CurrentUserDefault(),
-    # )
     author = CustomUserSerializer(read_only=True)
     ingredients = IngredientRecipeSerializer(
         source="recipe_in",
