@@ -56,12 +56,15 @@ class RecipesViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         user = request.user.id
+        if not Recipe.objects.filter(id=pk).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         if request.method == "DELETE":
-            basket = get_object_or_404(Basket, user=user, recipe=pk)
-            basket.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        recipe = get_object_or_404(Recipe, id=pk)
+            basket = Basket.objects.filter(user=user, recipe=pk)
+            if basket:
+                basket.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        recipe = Recipe.objects.get(id=pk)
         serializer = ShoppincartSerializer(
             data={
                 "user": user,
@@ -81,6 +84,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         basket = Basket.objects.filter(user=request.user)
         products = dict()
         if basket:
@@ -111,7 +116,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 product = f"Наименование: {k}, количество: {v[0]}, {v[1]}.\n"
                 content += product
             return HttpResponse(content, content_type="text/plain")
-
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -125,7 +129,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
             favorite_recipe = get_object_or_404(Favorite, user=user, recipe=pk)
             favorite_recipe.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
         recipe = get_object_or_404(Recipe, id=pk)
         serializer = FavoriteSerializer(
             data={

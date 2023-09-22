@@ -16,6 +16,7 @@ from .models import (
     TagInRecipe,
 )
 from users.models import CustomUser as User
+from users.serializers import CustomUserSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -70,11 +71,12 @@ class Base64ImageField(serializers.ImageField):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        queryset=User.objects.all(),
-        slug_field="id",
-        default=serializers.CurrentUserDefault(),
-    )
+    # author = serializers.SlugRelatedField(
+    #    queryset=User.objects.all(),
+    #    slug_field="id",
+    #    default=serializers.CurrentUserDefault(),
+    # )
+    author = CustomUserSerializer(read_only=True)
     ingredients = IngredientRecipeSerializer(
         source="recipe_in",
         many=True,
@@ -157,18 +159,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
         instance.save()
         return instance
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        author = get_object_or_404(User, id=data["author"])
-        data["author"] = {
-            "email": author.email,
-            "id": author.id,
-            "username": author.username,
-            "first_name": author.first_name,
-            "last_name": author.last_name,
-        }
-        return data
 
 
 class ShoppincartSerializer(serializers.ModelSerializer):
