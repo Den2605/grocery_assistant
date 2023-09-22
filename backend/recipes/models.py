@@ -121,6 +121,9 @@ class Follow(models.Model):
     is_subscribed = models.BooleanField(default=False)
 
     class Meta:
+        ordering = ("user",)
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписчики"
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "following"], name="unique_name_following"
@@ -178,6 +181,9 @@ class Basket(models.Model):
     )
 
     class Meta:
+        ordering = ("user",)
+        verbose_name = "Корзина"
+        verbose_name_plural = "Список покупок"
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "recipe"], name="unique_name_basket_recipe"
@@ -202,6 +208,9 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        ordering = ("user",)
+        verbose_name = "Избранное"
+        verbose_name_plural = "Избранное"
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "recipe"], name="unique_name_favorite_recipe"

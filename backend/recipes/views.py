@@ -4,7 +4,6 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from users.models import CustomUser as User
 
 from .models import (
     Basket,
@@ -26,6 +25,7 @@ from .serializers import (
     ShoppincartSerializer,
     TagSerializer,
 )
+from users.models import CustomUser as User
 
 
 class TagsViewSet(viewsets.ModelViewSet):

@@ -13,9 +13,6 @@ router = routers.DefaultRouter()
 router.register(r"recipes", RecipesViewSet, basename="recipes")
 router.register(r"tags", TagsViewSet, basename="tags")
 router.register(r"ingredients", IngredientsViewSet, basename="ingredients")
-# router.register(
-#    r"users/(?P<following_id>\d+)/subscribe", FollowViewSet, basename="follow"
-# )
 
 urlpatterns = [
     path(

@@ -4,7 +4,6 @@ from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from users.models import CustomUser as User
 
 from .models import (
     Basket,
@@ -16,8 +15,7 @@ from .models import (
     Tag,
     TagInRecipe,
 )
-
-# from users.serializers import CustomUserSerializer
+from users.models import CustomUser as User
 
 
 class TagSerializer(serializers.ModelSerializer):

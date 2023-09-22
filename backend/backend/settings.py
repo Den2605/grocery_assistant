@@ -27,7 +27,7 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -82,12 +82,13 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
 
 
 # Password validation
@@ -139,13 +140,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
+        # "rest_framework.permissions.IsAuthenticated",
         # "rest_framework.permissions.AllowAny",
-        # "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
+    # "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    # "PAGE_SIZE": 5,
+    "DEFAULT_PAGINATION_CLASS": "api.pagination.CustomPagination",
+    "PAGE_SIZE": 2,
 }
 
 
@@ -153,16 +158,19 @@ AUTH_USER_MODEL = "users.CustomUser"
 DJOSER = {
     "HIDE_USERS": False,
     "LOGIN_FIELD": "email",
+    "PERMISSIONS": {
+        "user_list": ["rest_framework.permissions.AllowAny"],
+        # "user": ["rest_framework.permissions.AllowAny"],
+        # "user_list": ["api.permissions.IsAuthenticatedOrReadOnly"],
+        "user": ["api.permissions.IsAuthenticatedOrReadOnly"],
+        # "current_user": ["rest_framework.permissions.AllowAny"],
+        # "current_user": ["rest_framework.permissions.IsAuthenticated"],
+        # "user_create": ["rest_framework.permissions.AllowAny"],
+        # "user_delete": ["rest_framework.permissions.IsAdminUser"],
+    },
     "SERIALIZERS": {
         # "user_create": "path.to.custom.serializer.UserCreateSerializer",
         "user": "users.serializers.CustomUserSerializer",
         "current_user": "users.serializers.CustomUserSerializer",
-    },
-    "PERMISSIONS": {
-        "user_list": ["rest_framework.permissions.AllowAny"],
-        "user": ["rest_framework.permissions.AllowAny"],
-        "current_user": ["rest_framework.permissions.AllowAny"],
-        # "user_create": ["rest_framework.permissions.AllowAny"],
-        # "user_delete": ["rest_framework.permissions.IsAdminUser"],
     },
 }

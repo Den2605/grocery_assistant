@@ -1,27 +1,28 @@
-from djoser.serializers import UserSerializer
-from users.models import CustomUser
+from recipes.models import Follow
+from rest_framework import serializers
+
+from .models import CustomUser as User
 
 
-class CustomUserSerializer(UserSerializer):
-    class Meta(UserSerializer):
-        model = CustomUser
+class CustomUserSerializer(serializers.ModelSerializer):
+    is_subscribe = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
         fields = (
             "email",
             "id",
             "username",
             "first_name",
             "last_name",
-            "password",
+            "is_subscribe",
         )
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data = {
-            "email": data["email"],
-            "id": data["id"],
-            "username": data["username"],
-            "first_name": data["first_name"],
-            "last_name": data["last_name"],
-            "password": data["password"],
-        }
-        return data
+    def get_is_subscribe(self, obj):
+        request = self.context.get("request")
+        if request.user.is_authenticated:
+            if Follow.objects.filter(
+                user=request.user.id, following=obj.id
+            ).exists():
+                return True
+        return False
