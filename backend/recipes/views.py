@@ -125,11 +125,15 @@ class RecipesViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk=None):
         user = request.user.id
+        if not Recipe.objects.filter(id=pk).exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         if request.method == "DELETE":
-            favorite_recipe = get_object_or_404(Favorite, user=user, recipe=pk)
-            favorite_recipe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        recipe = get_object_or_404(Recipe, id=pk)
+            favorite_recipe = Favorite.objects.filter(user=user, recipe=pk)
+            if favorite_recipe:
+                favorite_recipe.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        recipe = Recipe.objects.get(id=pk)
         serializer = FavoriteSerializer(
             data={
                 "user": user,
