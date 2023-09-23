@@ -224,6 +224,66 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
         )
 
 
+class AuthorSerializer(serializers.ModelSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "recipes",
+            "recipes_count",
+        )
+
+    def get_recipes(self, obj):
+        recipes_limit = self.context.get("recipes_limit")
+        if recipes_limit:
+            recipe = Recipe.objects.all()[: int(recipes_limit)]
+        else:
+            recipe = Recipe.objects.all()
+        return RecipeFollowSerializer(
+            recipe, many=True, source="recipes_user"
+        ).data
+
+    def get_recipes_count(self, obj):
+        return self.context.get("recipes_count")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["is_subscribe"] = True
+        return data
+
+
+class AuthorGetSerializer(serializers.ModelSerializer):
+    recipes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "recipes",
+        )
+
+    def get_recipes(self, obj):
+        recipes_limit = self.context.get("recipes_limit")
+        if recipes_limit:
+            recipe = Recipe.objects.all()[: int(recipes_limit)]
+        else:
+            recipe = Recipe.objects.all()
+        return RecipeFollowSerializer(
+            recipe, many=True, source="recipes_user"
+        ).data
+
+
 class FollowSerializer(serializers.ModelSerializer):
     def validate_following(self, value):
         if value.id == self.initial_data["user"]:
@@ -245,40 +305,3 @@ class FollowSerializer(serializers.ModelSerializer):
                 queryset=Follow.objects.all(), fields=("user", "following")
             )
         ]
-
-
-class AuthorSerializer(serializers.ModelSerializer):
-    recipes = RecipeFollowSerializer(many=True, source="recipes_user")
-
-    class Meta:
-        model = User
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "recipes",
-        )
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        recipes_count = len(Recipe.objects.filter(author=data["id"]))
-        data["recipes_count"] = recipes_count
-        data["is_subscribe"] = True
-        return data
-
-
-class AuthorGetSerializer(serializers.ModelSerializer):
-    recipes = RecipeFollowSerializer(many=True, source="recipes_user")
-
-    class Meta:
-        model = User
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "recipes",
-        )

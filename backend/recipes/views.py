@@ -61,10 +61,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    # filterset_fields = ("author_id",)
-    # search_fields = ("author",)
-    # filter_backends = (filters.SearchFilter,)
-    # search_fields = ("author__id", "tags__slug")
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -175,14 +171,21 @@ class FollowAPIView(APIView):
         follow_list = Follow.objects.filter(user=user).values_list(
             "following_id", flat=True
         )
+        recipes_limit = self.request.query_params.get("recipes_limit", None)
         follow_users = []
         for number in follow_list:
             follow_users.append(get_object_or_404(User, id=number))
+        queryset = follow_users
+        serializer = AuthorGetSerializer(
+            queryset,
+            context={"recipes_limit": recipes_limit},
+            many=True,
+        )
 
-        serializer = AuthorGetSerializer(follow_users, many=True)
         return Response(serializer.data)
 
     def post(self, request, pk):
+        recipes_limit = self.request.query_params.get("recipes_limit", None)
         user_id = self.request.user.id
         serializer = FollowSerializer(
             data={
@@ -192,7 +195,16 @@ class FollowAPIView(APIView):
         )
         if serializer.is_valid():
             serializer.save(is_subscribed=True)
-            serializer = AuthorSerializer(get_object_or_404(User, id=pk))
+            queryset = User.objects.filter(id=pk)
+            recipes_count = len(Recipe.objects.filter(author=pk))
+            serializer = AuthorSerializer(
+                queryset,
+                context={
+                    "recipes_limit": recipes_limit,
+                    "recipes_count": recipes_count,
+                },
+                many=True,
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
