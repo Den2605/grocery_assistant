@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from recipes.views import (
     FollowAPIView,
+    FollowViewset,
     IngredientsViewSet,
     RecipesViewSet,
     TagsViewSet,
@@ -33,7 +34,12 @@ urlpatterns = [
         name="recipes_favorite",
     ),
     path("", include(router.urls)),
-    path("users/subscriptions/", FollowAPIView.as_view()),
+    # path("users/subscriptions/", FollowAPIView.as_view()),
+    path(
+        "users/subscriptions/",
+        FollowViewset.as_view({"get": "list"}),
+        name="follow_users",
+    ),
     path("users/<int:pk>/subscribe/", FollowAPIView.as_view()),
     path("", include("djoser.urls")),
     path("auth/", include("djoser.urls.authtoken")),

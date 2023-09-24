@@ -274,7 +274,8 @@ class AuthorGetSerializer(serializers.ModelSerializer):
         )
 
     def get_recipes(self, obj):
-        recipes_limit = self.context.get("recipes_limit")
+        request = self.context["request"]
+        recipes_limit = request.query_params.get("recipes_limit", None)
         if recipes_limit:
             recipe = Recipe.objects.all()[: int(recipes_limit)]
         else:

@@ -1,7 +1,6 @@
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,7 +15,6 @@ from .models import (
     Recipe,
     Tag,
 )
-from .pagination import CustomPagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (
     AuthorGetSerializer,
@@ -166,18 +164,19 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class FollowAPIView(APIView):
-    def get(self, request):
-        user = self.request.user.id
-        recipes_limit = self.request.query_params.get("recipes_limit", None)
-        queryset = User.objects.filter(follow__user=user)
-        serializer = AuthorGetSerializer(
-            queryset,
-            context={"recipes_limit": recipes_limit},
-            many=True,
-        )
-        return Response(serializer.data)
+class FollowViewset(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = AuthorGetSerializer
 
+    def get_queryset(self):
+        user = self.request.user.id
+        queryset = User.objects.filter(follow__user=user)
+        return queryset
+
+
+class FollowAPIView(APIView):
     def post(self, request, pk):
         recipes_limit = self.request.query_params.get("recipes_limit", None)
         user_id = self.request.user.id
