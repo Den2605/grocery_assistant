@@ -37,6 +37,7 @@ from users.models import CustomUser as User
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
@@ -49,6 +50,7 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    pagination_class = None
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("^name",)
