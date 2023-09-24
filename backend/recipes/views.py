@@ -16,6 +16,7 @@ from .models import (
     Recipe,
     Tag,
 )
+from .pagination import CustomPagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (
     AuthorGetSerializer,
@@ -168,20 +169,13 @@ class RecipesViewSet(viewsets.ModelViewSet):
 class FollowAPIView(APIView):
     def get(self, request):
         user = self.request.user.id
-        follow_list = Follow.objects.filter(user=user).values_list(
-            "following_id", flat=True
-        )
         recipes_limit = self.request.query_params.get("recipes_limit", None)
-        follow_users = []
-        for number in follow_list:
-            follow_users.append(get_object_or_404(User, id=number))
-        queryset = follow_users
+        queryset = User.objects.filter(follow__user=user)
         serializer = AuthorGetSerializer(
             queryset,
             context={"recipes_limit": recipes_limit},
             many=True,
         )
-
         return Response(serializer.data)
 
     def post(self, request, pk):
