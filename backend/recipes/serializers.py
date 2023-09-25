@@ -31,37 +31,15 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
-    ingredient = serializers.SlugRelatedField(
-        queryset=Ingredient.objects.all(),
-        slug_field="id",
-    )
-    id = serializers.IntegerField(
-        source="ingredient.id",
-        read_only=True,
-    )
-    name = serializers.CharField(
-        source="ingredient.name",
-        read_only=True,
-    )
-    measurement_unit = serializers.CharField(
-        source="ingredient.measurement_unit",
-        read_only=True,
-    )
+    id = serializers.IntegerField(source="ingredient.id")
+    amount = serializers.IntegerField()
 
     class Meta:
         model = IngredientInRecipe
         fields = (
-            "ingredient",
             "id",
-            "name",
             "amount",
-            "measurement_unit",
         )
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        del data["ingredient"]
-        return data
 
 
 class Base64ImageField(serializers.ImageField):
@@ -136,10 +114,10 @@ class RecipeSerializer(serializers.ModelSerializer):
                 pass
         for ingredient in ingredients:
             try:
-                current_ingredient = ingredient.get("ingredient")
+                ingredient_id = ingredient.get("ingredient").get("id")
                 amount = ingredient.get("amount")
                 IngredientInRecipe.objects.create(
-                    ingredient=current_ingredient,
+                    ingredient_id=ingredient_id,
                     recipe=recipe,
                     amount=amount,
                 )
@@ -281,9 +259,9 @@ class AuthorGetSerializer(serializers.ModelSerializer):
         request = self.context["request"]
         recipes_limit = request.query_params.get("recipes_limit", None)
         if recipes_limit:
-            recipe = Recipe.objects.all()[: int(recipes_limit)]
+            recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
         else:
-            recipe = Recipe.objects.all()
+            recipe = Recipe.objects.filter(author=obj.id)
         return RecipeFollowSerializer(
             recipe, many=True, source="recipes_user"
         ).data
