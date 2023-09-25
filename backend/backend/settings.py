@@ -25,7 +25,7 @@ SECRET_KEY = (
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
@@ -143,9 +143,12 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "collected_static"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "/media/"
-# работает локально, не в контейнере
-# MEDIA_ROOT = BASE_DIR / "media"
+if DEBUG:
+    # работает локально, не в контейнере
+    MEDIA_ROOT = BASE_DIR / "media"
+else:
+    # работает в контейнере
+    MEDIA_ROOT = "/media/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 

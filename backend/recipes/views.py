@@ -28,23 +28,12 @@ from .serializers import (
 )
 from users.models import CustomUser as User
 
-# class TagsViewSet(viewsets.ModelViewSet):
-#    queryset = Tag.objects.all()
-#    serializer_class = TagSerializer
-#    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-
-# class IngredientsViewSet(viewsets.ModelViewSet):
-#    queryset = Ingredient.objects.all()
-#    serializer_class = IngredientSerializer
-#    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -112,23 +101,23 @@ class RecipesViewSet(viewsets.ModelViewSet):
                     recipe=recipe.recipe.id
                 ).values(
                     "ingredient__name",
-                    "number",
+                    "amount",
                     "ingredient__measurement_unit",
                 )
                 for ingredient in ingredients:
                     name = ingredient["ingredient__name"]
-                    number = ingredient["number"]
+                    amount = ingredient["amount"]
                     measurement_unit = ingredient[
                         "ingredient__measurement_unit"
                     ]
                     if name in products.keys():
                         last_number = products[name][0]
                         products[name] = [
-                            number + last_number,
+                            amount + last_number,
                             measurement_unit,
                         ]
                     else:
-                        products[name] = [number, measurement_unit]
+                        products[name] = [amount, measurement_unit]
             content = ""
             for k, v in products.items():
                 product = f"Наименование: {k}, количество: {v[0]}, {v[1]}.\n"

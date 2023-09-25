@@ -1,4 +1,5 @@
 from django.db import models
+
 from users.models import CustomUser as User
 
 
@@ -76,12 +77,10 @@ class Recipe(models.Model):
         Ingredient,
         related_name="recipe_ingredient",
         through="IngredientInRecipe",
-        # blank=False,
         verbose_name="Ингридиент",
     )
     tags = models.ManyToManyField(
         Tag,
-        # on_delete=models.CASCADE,
         related_name="recipe_tag",
         through="TagInRecipe",
         blank=False,
@@ -150,7 +149,7 @@ class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        to_field="name",
+        # to_field="name",
         related_name="ingredient_in",
     )
     recipe = models.ForeignKey(
@@ -158,10 +157,14 @@ class IngredientInRecipe(models.Model):
         on_delete=models.CASCADE,
         related_name="recipe_in",
     )
-    number = models.IntegerField(
+
+    amount = models.PositiveIntegerField(
         verbose_name="Количество",
-        # max_length=16,
     )
+    # number = models.IntegerField(
+    #    verbose_name="Количество",
+    # max_length=16,
+    # )
 
 
 class Basket(models.Model):
