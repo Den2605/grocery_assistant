@@ -28,7 +28,7 @@ services:
       - static:/frontend_static
     depends_on:
       - backend
-  nginx:
+  gateway:
     build: ./infra/
     env_file: .env
     ports:
