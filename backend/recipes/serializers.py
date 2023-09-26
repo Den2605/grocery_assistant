@@ -197,7 +197,6 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "tags",
-            # "author",
             "ingredients",
             "name",
             "image",

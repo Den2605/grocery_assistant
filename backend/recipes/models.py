@@ -1,5 +1,4 @@
 from django.db import models
-
 from users.models import CustomUser as User
 
 
@@ -94,7 +93,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
-        ordering = ("pub_date",)
+        ordering = ("-pub_date",)
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
 
@@ -149,7 +148,6 @@ class IngredientInRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        # to_field="name",
         related_name="ingredient_in",
     )
     recipe = models.ForeignKey(
@@ -161,10 +159,6 @@ class IngredientInRecipe(models.Model):
     amount = models.PositiveIntegerField(
         verbose_name="Количество",
     )
-    # number = models.IntegerField(
-    #    verbose_name="Количество",
-    # max_length=16,
-    # )
 
 
 class Basket(models.Model):

@@ -20,9 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = (
-    "django-insecure-orto+!bs4obj9r^32yxy*kir=8d*&dw(xr&c3oio!5v%p%_*a="
-)
+SECRET_KEY = os.getenv("SECRET_KEY", default="secret12345")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -156,15 +154,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
-        # "rest_framework.permissions.IsAuthenticated",
-        # "rest_framework.permissions.AllowAny",
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
-    # "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    # "PAGE_SIZE": 5,
     "DEFAULT_PAGINATION_CLASS": "api.pagination.CustomPagination",
     "PAGE_SIZE": 7,
 }
@@ -176,16 +170,9 @@ DJOSER = {
     "LOGIN_FIELD": "email",
     "PERMISSIONS": {
         "user_list": ["rest_framework.permissions.AllowAny"],
-        # "user": ["rest_framework.permissions.AllowAny"],
-        # "user_list": ["api.permissions.IsAuthenticatedOrReadOnly"],
         "user": ["api.permissions.IsAuthenticatedOrReadOnly"],
-        # "current_user": ["rest_framework.permissions.AllowAny"],
-        # "current_user": ["rest_framework.permissions.IsAuthenticated"],
-        # "user_create": ["rest_framework.permissions.AllowAny"],
-        # "user_delete": ["rest_framework.permissions.IsAdminUser"],
     },
     "SERIALIZERS": {
-        # "user_create": "path.to.custom.serializer.UserCreateSerializer",
         "user": "users.serializers.CustomUserSerializer",
         "current_user": "users.serializers.CustomUserSerializer",
     },

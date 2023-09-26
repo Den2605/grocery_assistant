@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
+from rest_framework import routers
+
 from recipes.views import (
     FollowAPIView,
     FollowViewset,
@@ -8,7 +10,6 @@ from recipes.views import (
     RecipesViewSet,
     TagsViewSet,
 )
-from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register(r"recipes", RecipesViewSet, basename="recipes")
@@ -34,7 +35,6 @@ urlpatterns = [
         name="recipes_favorite",
     ),
     path("", include(router.urls)),
-    # path("users/subscriptions/", FollowAPIView.as_view()),
     path(
         "users/subscriptions/",
         FollowViewset.as_view({"get": "list"}),
