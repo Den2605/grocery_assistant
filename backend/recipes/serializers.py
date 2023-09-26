@@ -3,6 +3,8 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+from users.models import CustomUser as User
+from users.serializers import CustomUserSerializer
 
 from .models import (
     Basket,
@@ -14,8 +16,6 @@ from .models import (
     Tag,
     TagInRecipe,
 )
-from users.models import CustomUser as User
-from users.serializers import CustomUserSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -57,9 +57,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         source="recipe_in",
         many=True,
     )
-    tags = TagSerializer(
-        many=True,
-        read_only=True,
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), many=True
     )
     image = Base64ImageField(
         required=True,
@@ -102,12 +101,12 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ingredients = validated_data.pop("recipe_in")
+        tags = validated_data.pop("tags")
         recipe = Recipe.objects.create(**validated_data)
-        for tag in self.initial_data["tags"]:
+        for tag in tags:
             try:
-                current_tag = Tag.objects.get(id=tag)
                 TagInRecipe.objects.create(
-                    tag=current_tag,
+                    tag=tag,
                     recipe=recipe,
                 )
             except Tag.DoesNotExist:

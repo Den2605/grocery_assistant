@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", default="secret12345")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "51.250.108.248",
@@ -165,7 +165,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "api.pagination.CustomPagination",
-    "PAGE_SIZE": 7,
+    "PAGE_SIZE": 6,
 }
 
 
