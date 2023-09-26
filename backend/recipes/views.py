@@ -4,6 +4,7 @@ from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from users.models import CustomUser as User
 
 from .filters import RecipeFilter
 from .models import (
@@ -26,7 +27,6 @@ from .serializers import (
     ShoppincartSerializer,
     TagSerializer,
 )
-from users.models import CustomUser as User
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -41,8 +41,11 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     pagination_class = None
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ("^name",)
+    filter_backends = (DjangoFilterBackend,)
+    # filter_backends = (filters.SearchFilter,)
+    SEARCH_PARAM = "name"
+    # search_fields = ["^name"]
+    # search_fields = "name"
 
 
 class RecipesViewSet(viewsets.ModelViewSet):

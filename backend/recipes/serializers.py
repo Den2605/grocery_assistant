@@ -1,6 +1,8 @@
 import base64
 
 from django.core.files.base import ContentFile
+from django.forms import ValidationError
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from users.models import CustomUser as User
@@ -99,6 +101,29 @@ class RecipeSerializer(serializers.ModelSerializer):
             return False
         return False
 
+    def validate_tags(self, tags):
+        if not tags:
+            raise ValidationError("Поле тег не может быть пустым.")
+        if len(tags) != len(set(tags)):
+            raise ValidationError(f"{tags} уже выбран.")
+        return tags
+
+    def validate_ingredients(self, data):
+        ingredients = self.initial_data.get("ingredients")
+        if not ingredients:
+            raise ValidationError("Добавьте ингридиенты.")
+        ingredients_list = []
+        for ingredient in ingredients:
+            if int(ingredient["amount"]) < 1:
+                raise ValidationError(
+                    "Заполните поле количества ингридиентов."
+                )
+            ingredient = get_object_or_404(Ingredient, id=ingredient["id"])
+            if ingredient.name in ingredients_list:
+                raise ValidationError(f"{ingredient.name} уже есть в списке.")
+            ingredients_list.append(ingredient.name)
+        return data
+
     def create(self, validated_data):
         ingredients = validated_data.pop("recipe_in")
         tags = validated_data.pop("tags")
@@ -113,10 +138,11 @@ class RecipeSerializer(serializers.ModelSerializer):
                 pass
         for ingredient in ingredients:
             try:
-                ingredient_id = ingredient.get("ingredient").get("id")
                 amount = ingredient.get("amount")
+                id = ingredient.get("ingredient")["id"]
+                ingredient = Ingredient.objects.get(id=id)
                 IngredientInRecipe.objects.create(
-                    ingredient_id=ingredient_id,
+                    ingredient=ingredient,
                     recipe=recipe,
                     amount=amount,
                 )
