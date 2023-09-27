@@ -135,10 +135,12 @@ class TagInRecipe(models.Model):
     tag = models.ForeignKey(
         Tag,
         on_delete=models.CASCADE,
+        related_name="tag_in",
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        related_name="tag_in",
     )
 
 

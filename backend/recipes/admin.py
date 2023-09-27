@@ -11,10 +11,6 @@ class TagAdmin(admin.ModelAdmin):
         "color",
         "slug",
     )
-    # search_fields = (
-    #    "email",
-    #    "username",
-    # )
     empty_value_display = "-пусто-"
 
 
@@ -35,15 +31,16 @@ class RecipeAdmin(admin.ModelAdmin):
         "id",
         "name",
         "author",
-        # "image",
-        # "text",
+        "image",
+        "text",
         # "ingredients",
         # "tags",
-        # "cooking_time",
-        # "pub_date",
+        "cooking_time",
+        "pub_date",
     )
     search_fields = (
         "name",
+        "author",
         "tags",
     )
     empty_value_display = "-пусто-"
