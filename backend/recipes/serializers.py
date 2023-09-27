@@ -25,11 +25,6 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ("id", "name", "color", "slug")
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        print(data)
-        return super().to_representation(instance)
-
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,6 +66,7 @@ class Base64ImageField(serializers.ImageField):
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
+    author = CustomUserSerializer(read_only=True)
     ingredients = IngredientSerializer(
         many=True,
     )
@@ -199,7 +195,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        print(instance)
         serializer = RecipeGetSerializer(
             instance, context={"request": self.context.get("request")}
         )
