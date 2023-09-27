@@ -1,14 +1,13 @@
 import base64
 
+from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
+
 from django.core.files.base import ContentFile
 from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
-from users.models import CustomUser as User
-from users.serializers import CustomUserSerializer
 
-from .models import (
+from recipes.models import (
     Basket,
     Favorite,
     Follow,
@@ -18,6 +17,8 @@ from .models import (
     Tag,
     TagInRecipe,
 )
+from users.models import CustomUser as User
+from users.serializers import CustomUserSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
