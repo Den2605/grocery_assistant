@@ -9,15 +9,15 @@ jobs:
   tests:    
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: postgres:13.10
-        env:
-          POSTGRES_USER: foodgram_user
-          POSTGRES_PASSWORD: foodgram_password
-          POSTGRES_DB: foodgram
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      #postgres:
+      #  image: postgres:13.10
+      #  env:
+      #    POSTGRES_USER: foodgram_user
+      #    POSTGRES_PASSWORD: foodgram_password
+      #    POSTGRES_DB: foodgram
+      #  ports:
+      #    - 5432:5432
+      #  options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:    
     - name: Check out repository code
       uses: actions/checkout@v3    
@@ -31,12 +31,10 @@ jobs:
         pip install flake8==6.0.0 flake8-isort==6.0.0
         pip install -r ./backend/requirements.txt 
     - name: Test with flake8 and django tests
-      env:
-        POSTGRES_USER: foodgram_user
-        POSTGRES_PASSWORD: foodgram_password
-        POSTGRES_DB: foodgram
-        DB_HOST: 127.0.0.1
-        DB_PORT: 5432
-      run: |
-        tree .
-        python -m flake8 backend/
+      #env:
+      #  POSTGRES_USER: foodgram_user
+      #  POSTGRES_PASSWORD: foodgram_password
+      #  POSTGRES_DB: foodgram
+      #  DB_HOST: 127.0.0.1
+      #  DB_PORT: 5432
+      run: python -m flake8 backend/
