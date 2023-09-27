@@ -1,13 +1,18 @@
-from django_filters import rest_framework as filters
+from django_filters import rest_framework as filter
+from rest_framework import filters
 
 from .models import Recipe
 
 
-class RecipeFilter(filters.FilterSet):
-    author = filters.NumberFilter(field_name="author__id")
-    tags = filters.CharFilter(field_name="tags__slug")
-    is_favorited = filters.BooleanFilter(method="is_favorite")
-    is_in_shopping_cart = filters.BooleanFilter(method="shopping_cart")
+class CustomSearchFilter(filters.SearchFilter):
+    search_param = "name"
+
+
+class RecipeFilter(filter.FilterSet):
+    author = filter.NumberFilter(field_name="author__id")
+    tags = filter.CharFilter(field_name="tags__slug")
+    is_favorited = filter.BooleanFilter(method="is_favorite")
+    is_in_shopping_cart = filter.BooleanFilter(method="shopping_cart")
 
     class Meta:
         model = Recipe
