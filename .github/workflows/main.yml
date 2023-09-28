@@ -139,7 +139,7 @@ jobs:
           sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
           #При первом запуске: загрузка ингридиентов в базу данных
           #Загрузка ингридиентов в базу данных
-          #sudo docker compose -f docker-compose.production.yml exec backend python manage.py ingredients_csv
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py ingredients_csv
           # Загрузка тегов в базу данных
-          #sudo docker compose -f docker-compose.production.yml exec backend python manage.py tags_csv
+          sudo docker compose -f docker-compose.production.yml exec backend python manage.py tags_csv
           
