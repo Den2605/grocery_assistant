@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
     "task-practicum.ddns.net",
 ]
 
+CSRF_TRUSTED_ORIGINS = ["https://task-practicum.ddns.net/"]
 
 # Application definition
 
