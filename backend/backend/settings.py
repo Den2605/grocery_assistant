@@ -29,7 +29,7 @@ ALLOWED_HOSTS = [
     "51.250.108.248",
     "127.0.0.1",
     "localhost",
-    "taski-practicum.ddns.net",
+    "task-practicum.ddns.net",
 ]
 
 
