@@ -9,7 +9,6 @@ SECRET_KEY = os.getenv("SECRET_KEY", default="secret12345")
 DEBUG = os.getenv("Debug", default="False")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
 
-
 CSRF_TRUSTED_ORIGINS = ["CSRF_TRUSTED_ORIGINS"]
 
 
