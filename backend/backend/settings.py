@@ -6,16 +6,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", default="secret12345")
 
-DEBUG = False
+DEBUG = os.getenv("Debug", default="False")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
 
-ALLOWED_HOSTS = [
-    "51.250.108.248",
-    "127.0.0.1",
-    "localhost",
-    "task-practicum.ddns.net",
-]
 
-CSRF_TRUSTED_ORIGINS = ["https://task-practicum.ddns.net"]
+CSRF_TRUSTED_ORIGINS = ["CSRF_TRUSTED_ORIGINS"]
 
 
 INSTALLED_APPS = [
@@ -146,7 +141,7 @@ DJOSER = {
         "user": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
     },
     "SERIALIZERS": {
-        "user": "users.serializers.CustomUserSerializer",
-        "current_user": "users.serializers.CustomUserSerializer",
+        "user": "api.serializers.CustomUserSerializer",
+        "current_user": "api.serializers.CustomUserSerializer",
     },
 }
