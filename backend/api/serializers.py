@@ -1,5 +1,4 @@
 from django.forms import ValidationError
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -12,7 +11,6 @@ from recipes.models import (
     IngredientInRecipe,
     Recipe,
     Tag,
-    TagInRecipe,
 )
 from users.models import CustomUser as User
 
@@ -171,20 +169,19 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop("recipes")
         tags = validated_data.pop("tags")
         recipe = Recipe.objects.create(**validated_data)
-        for tag in tags:
-            TagInRecipe.objects.create(
-                tag=tag,
-                recipe=recipe,
-            )
+        recipe.tags.set(tags)
+        ingredient_obj = []
         for ingredient in ingredients:
             amount = ingredient.get("amount")
             id = ingredient.get("ingredient")["id"]
-            ingredient = Ingredient.objects.get(id=id)
-            IngredientInRecipe.objects.create(
-                ingredient=ingredient,
-                recipe=recipe,
-                amount=amount,
+            ingredient_obj.append(
+                IngredientInRecipe(
+                    ingredient_id=id,
+                    recipe=recipe,
+                    amount=amount,
+                )
             )
+        IngredientInRecipe.objects.bulk_create(ingredient_obj)
         return recipe
 
     def update(self, instance, validated_data):
