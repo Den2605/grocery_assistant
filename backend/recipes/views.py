@@ -1,10 +1,9 @@
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from django.http import HttpResponse
 
 from recipes.filters import CustomSearchFilter, RecipeFilter
 from recipes.models import (
@@ -179,7 +178,7 @@ class FollowAPIView(APIView):
             }
         )
         if serializer.is_valid():
-            serializer.save(is_subscribed=True)
+            serializer.save()
             queryset = User.objects.filter(id=pk)
             recipes_count = len(Recipe.objects.filter(author=pk))
             serializer = AuthorSerializer(

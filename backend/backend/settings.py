@@ -6,11 +6,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", default="secret12345")
 
-DEBUG = os.getenv("Debug", default="False")
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
-CSRF_TRUSTED_ORIGINS = ["https://task-practicum.ddns.net"]
-# ALLOWED_HOSTS = []
-# DEBUG = True
+# DEBUG = os.getenv("Debug", default="False")
+# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
+# CSRF_TRUSTED_ORIGINS = ["https://task-practicum.ddns.net"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+DEBUG = True
 
 
 INSTALLED_APPS = [
@@ -112,12 +112,12 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "collected_static"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "/media/"
+# MEDIA_ROOT = "/media/"
 
-# if DEBUG:
-#    MEDIA_ROOT = BASE_DIR / "media"
+if DEBUG:
+    MEDIA_ROOT = BASE_DIR / "media"
 # else:
-#    MEDIA_ROOT = "/media/"
+# MEDIA_ROOT = "/media/"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -111,7 +111,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     ingredients = IngredientRecipeSerializer(
-        source="recipe_in",
+        source="recipes",
         many=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
@@ -158,7 +158,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        ingredients = validated_data.pop("recipe_in")
+        ingredients = validated_data.pop("recipes")
         tags = validated_data.pop("tags")
         recipe = Recipe.objects.create(**validated_data)
         for tag in tags:
@@ -270,7 +270,7 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
 
 
 class AuthorSerializer(serializers.ModelSerializer):
-    recipes = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField(read_only=True)
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -291,9 +291,7 @@ class AuthorSerializer(serializers.ModelSerializer):
             recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
         else:
             recipe = Recipe.objects.filter(author=obj.id)
-        return RecipeFollowSerializer(
-            recipe, many=True, source="recipes_user"
-        ).data
+        return RecipeFollowSerializer(recipe, many=True).data
 
     def get_recipes_count(self, obj):
         return self.context.get("recipes_count")
@@ -326,7 +324,9 @@ class AuthorGetSerializer(serializers.ModelSerializer):
         else:
             recipe = Recipe.objects.filter(author=obj.id)
         return RecipeFollowSerializer(
-            recipe, many=True, source="recipes_user"
+            recipe,
+            many=True,
+            source="recipes",
         ).data
 
 
@@ -344,7 +344,6 @@ class FollowSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "following",
-            "is_subscribed",
         )
         validators = [
             UniqueTogetherValidator(

@@ -1,4 +1,6 @@
+from django.core.validators import MinValueValidator
 from django.db import models
+
 from users.models import CustomUser as User
 
 
@@ -63,7 +65,7 @@ class Recipe(models.Model):
         User,
         on_delete=models.CASCADE,
         blank=False,
-        related_name="recipes_user",
+        related_name="recipes",
         verbose_name="Пользователь",
     )
     image = models.ImageField(
@@ -74,19 +76,20 @@ class Recipe(models.Model):
     text = models.CharField(max_length=255, verbose_name="Описание блюда")
     ingredients = models.ManyToManyField(
         Ingredient,
-        related_name="recipe_ingredient",
+        related_name="recipes",
         through="IngredientInRecipe",
         verbose_name="Ингридиент",
     )
     tags = models.ManyToManyField(
         Tag,
-        related_name="recipe_tag",
+        related_name="recipes",
         through="TagInRecipe",
         blank=False,
         verbose_name="Тег",
     )
-    cooking_time = models.IntegerField(
-        verbose_name="Время приготовления блюда"
+    cooking_time = models.PositiveIntegerField(
+        verbose_name="Время приготовления блюда(мин)",
+        validators=[MinValueValidator(1, message="Не менее 1")],
     )
     pub_date = models.DateTimeField(
         auto_now_add=True, verbose_name="Дата публикации"
@@ -116,7 +119,6 @@ class Follow(models.Model):
         verbose_name="Автор",
         related_name="follow",
     )
-    is_subscribed = models.BooleanField(default=False)
 
     class Meta:
         ordering = ("user",)
@@ -143,6 +145,15 @@ class TagInRecipe(models.Model):
         related_name="tag_in",
     )
 
+    class Meta:
+        verbose_name = "Тег рецепта"
+        verbose_name_plural = "Теги рецепта"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tag", "recipe"], name="recipe_tag_unique"
+            )
+        ]
+
 
 class IngredientInRecipe(models.Model):
     """Промежуточная модель Ingredients"""
@@ -161,6 +172,16 @@ class IngredientInRecipe(models.Model):
     amount = models.PositiveIntegerField(
         verbose_name="Количество",
     )
+
+    class Meta:
+        verbose_name = "Количество ингредиента"
+        verbose_name_plural = "Количество ингредиентов"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ingredient", "recipe"],
+                name="recipe_ingredient_unique",
+            )
+        ]
 
 
 class Basket(models.Model):

@@ -33,8 +33,6 @@ class RecipeAdmin(admin.ModelAdmin):
         "author",
         "image",
         "text",
-        # "ingredients",
-        # "tags",
         "cooking_time",
         "pub_date",
     )
