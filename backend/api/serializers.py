@@ -76,15 +76,6 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
         )
 
 
-# class Base64ImageField(serializers.ImageField):
-#    def to_internal_value(self, data):
-#        if isinstance(data, str) and data.startswith("data:image"):
-#            format, imgstr = data.split(";base64,")
-#            ext = format.split("/")[-1]
-#            data = ContentFile(base64.b64decode(imgstr), name=f"temp.{ext}")
-#        return super().to_internal_value(data)
-
-
 class RecipeGetSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     ingredients = IngredientSerializer(
@@ -113,18 +104,16 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         user = request.user
         if request.method == "GET" or "PATCH":
-            if Basket.objects.filter(user=user.id, recipe=obj.id).exists():
-                return True
-            return False
+            return Basket.objects.filter(user=user.id, recipe=obj.id).exists()
         return False
 
     def get_is_favorited(self, obj):
         request = self.context.get("request")
         user = request.user
         if request.method == "GET" or "PATCH":
-            if Favorite.objects.filter(user=user.id, recipe=obj.id).exists():
-                return True
-            return False
+            return Favorite.objects.filter(
+                user=user.id, recipe=obj.id
+            ).exists()
         return False
 
 
@@ -162,19 +151,20 @@ class RecipeSerializer(serializers.ModelSerializer):
         return tags
 
     def validate_ingredients(self, data):
-        ingredients = self.initial_data.get("ingredients")
-        if not ingredients:
-            raise ValidationError("Добавьте ингридиенты.")
+        if not data:
+            raise ValidationError("Добавьте ингредиенты.")
         ingredients_list = []
-        for ingredient in ingredients:
+        for ingredient in data:
             if int(ingredient["amount"]) < 1:
                 raise ValidationError(
-                    "Заполните поле количества ингридиентов."
+                    "Заполните поле количества ингредиентов."
                 )
-            ingredient = get_object_or_404(Ingredient, id=ingredient["id"])
-            if ingredient.name in ingredients_list:
-                raise ValidationError(f"{ingredient.name} уже есть в списке.")
-            ingredients_list.append(ingredient.name)
+            id = ingredient["ingredient"]["id"]
+            if id in ingredients_list:
+                raise ValidationError(
+                    f"Ингредиент id = {id} уже есть в списке."
+                )
+            ingredients_list.append(id)
         return data
 
     def create(self, validated_data):
@@ -182,25 +172,19 @@ class RecipeSerializer(serializers.ModelSerializer):
         tags = validated_data.pop("tags")
         recipe = Recipe.objects.create(**validated_data)
         for tag in tags:
-            try:
-                TagInRecipe.objects.create(
-                    tag=tag,
-                    recipe=recipe,
-                )
-            except Tag.DoesNotExist:
-                pass
+            TagInRecipe.objects.create(
+                tag=tag,
+                recipe=recipe,
+            )
         for ingredient in ingredients:
-            try:
-                amount = ingredient.get("amount")
-                id = ingredient.get("ingredient")["id"]
-                ingredient = Ingredient.objects.get(id=id)
-                IngredientInRecipe.objects.create(
-                    ingredient=ingredient,
-                    recipe=recipe,
-                    amount=amount,
-                )
-            except Ingredient.DoesNotExist:
-                pass
+            amount = ingredient.get("amount")
+            id = ingredient.get("ingredient")["id"]
+            ingredient = Ingredient.objects.get(id=id)
+            IngredientInRecipe.objects.create(
+                ingredient=ingredient,
+                recipe=recipe,
+                amount=amount,
+            )
         return recipe
 
     def update(self, instance, validated_data):

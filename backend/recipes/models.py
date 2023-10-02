@@ -34,7 +34,7 @@ class Ingredient(models.Model):
     """Ингредиенты."""
 
     name = models.CharField(
-        verbose_name="Название ингридиента",
+        verbose_name="Название ингредиента",
         max_length=256,
         unique=True,
     )
@@ -45,8 +45,8 @@ class Ingredient(models.Model):
 
     class Meta:
         ordering = ("name",)
-        verbose_name = "Ингридиент"
-        verbose_name_plural = "Ингридиенты"
+        verbose_name = "Ингредиент"
+        verbose_name_plural = "Ингредиенты"
         unique_together = ("name", "measurement_unit")
 
     def __str__(self):
@@ -78,7 +78,7 @@ class Recipe(models.Model):
         Ingredient,
         related_name="recipes",
         through="IngredientInRecipe",
-        verbose_name="Ингридиент",
+        verbose_name="Ингредиент",
     )
     tags = models.ManyToManyField(
         Tag,
