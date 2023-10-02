@@ -1,3 +1,4 @@
+from django.db.models.aggregates import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
@@ -67,7 +68,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if request.method == "DELETE":
             basket = Basket.objects.filter(user=user, recipe=pk)
-            if basket:
+            if basket.exists():
                 basket.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -94,8 +95,18 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         basket = Basket.objects.filter(user=request.user)
+        # print(basket)
+        ingredients = (
+            IngredientInRecipe.objects.filter(
+                recipe__baskets__user=request.user
+            )
+            .values("ingredient__name", "ingredient__measurement_unit")
+            .annotate(total_amount=Sum("amount"))
+            .order_by()
+        )
+        print(ingredients)
         products = dict()
-        if basket:
+        if basket.exists():
             for recipe in basket:
                 ingredients = IngredientInRecipe.objects.filter(
                     recipe=recipe.recipe.id

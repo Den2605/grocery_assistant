@@ -165,11 +165,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredients_list.append(id)
         return data
 
-    def create(self, validated_data):
-        ingredients = validated_data.pop("recipes")
-        tags = validated_data.pop("tags")
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
+    def ingredients_recipe(self, recipe, ingredients):
         ingredient_obj = []
         for ingredient in ingredients:
             amount = ingredient.get("amount")
@@ -184,22 +180,40 @@ class RecipeSerializer(serializers.ModelSerializer):
         IngredientInRecipe.objects.bulk_create(ingredient_obj)
         return recipe
 
-    def update(self, instance, validated_data):
-        instance.author = validated_data.get("author", instance.author)
-        instance.name = validated_data.get("name", instance.name)
-        instance.image = validated_data.get("image", instance.image)
-        instance.text = validated_data.get("text", instance.text)
-        instance.cooking_time = validated_data.get(
-            "cooking_time", instance.cooking_time
-        )
-        instance.save()
-        return instance
+    def create(self, validated_data):
+        ingredients = validated_data.pop("recipes")
+        tags = validated_data.pop("tags")
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        return self.ingredients_recipe(recipe, ingredients)
+
+    def update(self, recipe, validated_data):
+        ingredients = validated_data.pop("recipes")
+        tags = validated_data.pop("tags")
+        if tags:
+            recipe.tags.clear()
+            recipe.tags.set(tags)
+        if ingredients:
+            recipe.ingredients.clear()
+            self.ingredients_recipe(recipe, ingredients)
+        super().update(instance=self.instance, validated_data=validated_data)
+
+        recipe.save()
+        return recipe
 
     def to_representation(self, instance):
         serializer = RecipeGetSerializer(
             instance, context={"request": self.context.get("request")}
         )
         return serializer.data
+
+
+def delete_recipe_user(data):
+    if data["recipe"]:
+        del data["recipe"]
+    if data["user"]:
+        del data["user"]
+    return data
 
 
 class ShoppincartSerializer(serializers.ModelSerializer):
@@ -218,8 +232,7 @@ class ShoppincartSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        del data["recipe"]
-        del data["user"]
+        delete_recipe_user(data)
         return data
 
 
@@ -239,8 +252,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        del data["recipe"]
-        del data["user"]
+        delete_recipe_user(data)
         return data
 
 
