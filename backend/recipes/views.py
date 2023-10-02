@@ -5,6 +5,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.permissions import AuthorOrReadOnly
+from api.serializers import (
+    AuthorGetSerializer,
+    AuthorSerializer,
+    FavoriteSerializer,
+    FollowSerializer,
+    IngredientSerializer,
+    RecipeSerializer,
+    ShoppincartSerializer,
+    TagSerializer,
+)
 from recipes.filters import CustomSearchFilter, RecipeFilter
 from recipes.models import (
     Basket,
@@ -14,17 +25,6 @@ from recipes.models import (
     IngredientInRecipe,
     Recipe,
     Tag,
-)
-from recipes.permissions import AuthorOrReadOnly
-from recipes.serializers import (
-    AuthorGetSerializer,
-    AuthorSerializer,
-    FavoriteSerializer,
-    FollowSerializer,
-    IngredientSerializer,
-    RecipeSerializer,
-    ShoppincartSerializer,
-    TagSerializer,
 )
 from users.models import CustomUser as User
 
