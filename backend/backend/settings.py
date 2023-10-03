@@ -8,6 +8,8 @@ DEBUG = os.getenv("Debug", default="False")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
 CSRF_TRUSTED_ORIGINS = ["https://task-practicum.ddns.net"]
 
+# DEBUG = True
+# ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
     "api.apps.ApiConfig",
