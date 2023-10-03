@@ -282,7 +282,17 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
         )
 
 
-class AuthorSerializer(serializers.ModelSerializer):
+class GetRecipe:
+    def get_author_recipes(self, obj):
+        recipes_limit = self.context.get("recipes_limit")
+        if recipes_limit:
+            recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
+        else:
+            recipe = Recipe.objects.filter(author=obj.id)
+        return RecipeFollowSerializer(recipe, many=True).data
+
+
+class AuthorSerializer(serializers.ModelSerializer, GetRecipe):
     recipes = serializers.SerializerMethodField(read_only=True)
     recipes_count = serializers.SerializerMethodField()
 
@@ -299,12 +309,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         )
 
     def get_recipes(self, obj):
-        recipes_limit = self.context.get("recipes_limit")
-        if recipes_limit:
-            recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
-        else:
-            recipe = Recipe.objects.filter(author=obj.id)
-        return RecipeFollowSerializer(recipe, many=True).data
+        return super().get_author_recipes(obj)
 
     def get_recipes_count(self, obj):
         return self.context.get("recipes_count")
@@ -315,7 +320,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         return data
 
 
-class AuthorGetSerializer(serializers.ModelSerializer):
+class AuthorGetSerializer(serializers.ModelSerializer, GetRecipe):
     recipes = serializers.SerializerMethodField()
 
     class Meta:
@@ -330,17 +335,7 @@ class AuthorGetSerializer(serializers.ModelSerializer):
         )
 
     def get_recipes(self, obj):
-        request = self.context["request"]
-        recipes_limit = request.query_params.get("recipes_limit", None)
-        if recipes_limit:
-            recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
-        else:
-            recipe = Recipe.objects.filter(author=obj.id)
-        return RecipeFollowSerializer(
-            recipe,
-            many=True,
-            source="recipes",
-        ).data
+        return super().get_author_recipes(obj)
 
 
 class FollowSerializer(serializers.ModelSerializer):

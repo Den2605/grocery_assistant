@@ -57,23 +57,20 @@ class RecipesViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
         return super().perform_create(serializer)
 
-    @action(
-        detail=True,
-        methods=["post", "delete"],
-        permission_classes=(permissions.IsAuthenticated,),
-    )
-    def shopping_cart(self, request, pk=None):
+    def shopping_or_favorite(
+        self, current_model, current_serializer, request, pk=None
+    ):
         user = request.user.id
         if not Recipe.objects.filter(id=pk).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
         if request.method == "DELETE":
-            basket = Basket.objects.filter(user=user, recipe=pk)
+            basket = current_model.objects.filter(user=user, recipe=pk)
             if basket.exists():
                 basket.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         recipe = Recipe.objects.get(id=pk)
-        serializer = ShoppincartSerializer(
+        serializer = current_serializer(
             data={
                 "user": user,
                 "recipe": pk,
@@ -85,6 +82,26 @@ class RecipesViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["post", "delete"],
+        permission_classes=(permissions.IsAuthenticated,),
+    )
+    def favorite(self, request, pk=None):
+        return self.shopping_or_favorite(
+            Favorite, FavoriteSerializer, request, pk=pk
+        )
+
+    @action(
+        detail=True,
+        methods=["post", "delete"],
+        permission_classes=(permissions.IsAuthenticated,),
+    )
+    def shopping_cart(self, request, pk=None):
+        return self.shopping_or_favorite(
+            Basket, ShoppincartSerializer, request, pk=pk
+        )
 
     @action(
         detail=True,
@@ -116,35 +133,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 content += product
             return HttpResponse(content, content_type="text/plain")
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(
-        detail=True,
-        methods=["post", "delete"],
-        permission_classes=(permissions.IsAuthenticated,),
-    )
-    def favorite(self, request, pk=None):
-        user = request.user.id
-        if not Recipe.objects.filter(id=pk).exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        if request.method == "DELETE":
-            favorite_recipe = Favorite.objects.filter(user=user, recipe=pk)
-            if favorite_recipe:
-                favorite_recipe.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        recipe = Recipe.objects.get(id=pk)
-        serializer = FavoriteSerializer(
-            data={
-                "user": user,
-                "recipe": pk,
-                "name": recipe.name,
-                "image": recipe.image,
-                "cooking_time": recipe.cooking_time,
-            },
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class FollowViewset(
