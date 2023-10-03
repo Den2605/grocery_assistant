@@ -149,7 +149,6 @@ class FollowViewset(
     def get_queryset(self):
         user = self.request.user.id
         queryset = User.objects.filter(follow__user=user)
-        # queryset=User.objects.filter()
         return queryset
 
 

@@ -16,7 +16,7 @@ from users.models import CustomUser as User
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    is_subscribe = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -26,10 +26,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
             "username",
             "first_name",
             "last_name",
-            "is_subscribe",
+            "is_subscribed",
         )
 
-    def get_is_subscribe(self, obj):
+    def get_is_subscribed(self, obj):
         request = self.context.get("request")
         if request.user.is_authenticated:
             return Follow.objects.filter(
@@ -99,16 +99,12 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get("request")
         user = request.user
-        # if request.method == "GET" or "PATCH":
         return Basket.objects.filter(user=user.id, recipe=obj.id).exists()
-        # return False
 
     def get_is_favorited(self, obj):
         request = self.context.get("request")
         user = request.user
-        # if request.method == "GET" or "PATCH":
         return Favorite.objects.filter(user=user.id, recipe=obj.id).exists()
-        # return False
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -312,7 +308,8 @@ class AuthorSerializer(serializers.ModelSerializer, GetRecipe):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data["is_subscribe"] = True
+        data["is_subscribed"] = True
+        print(data)
         return data
 
 
