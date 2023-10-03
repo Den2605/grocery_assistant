@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.filters import CustomSearchFilter, RecipeFilter
 from api.permissions import AuthorOrReadOnly
 from api.serializers import (
     AuthorGetSerializer,
@@ -13,11 +14,11 @@ from api.serializers import (
     FavoriteSerializer,
     FollowSerializer,
     IngredientSerializer,
+    RecipeGetSerializer,
     RecipeSerializer,
     ShoppincartSerializer,
     TagSerializer,
 )
-from recipes.filters import CustomSearchFilter, RecipeFilter
 from recipes.models import (
     Basket,
     Favorite,
@@ -48,10 +49,14 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
     permission_classes = (AuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+
+    def get_serializer(self, *args, **kwargs):
+        if self.request.method == "GET":
+            return RecipeGetSerializer
+        return RecipeSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

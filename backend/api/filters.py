@@ -1,7 +1,7 @@
 from django_filters import rest_framework as filter
 from rest_framework import filters
 
-from .models import Recipe
+from recipes.models import Recipe
 
 
 class CustomSearchFilter(filters.SearchFilter):
