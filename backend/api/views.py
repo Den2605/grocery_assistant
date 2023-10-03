@@ -95,40 +95,21 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         basket = Basket.objects.filter(user=request.user)
-        # print(basket)
-        ingredients = (
-            IngredientInRecipe.objects.filter(
-                recipe__baskets__user=request.user
-            )
-            .values("ingredient__name", "ingredient__measurement_unit")
-            .annotate(total_amount=Sum("amount"))
-            .order_by()
-        )
-        print(ingredients)
         products = dict()
         if basket.exists():
-            for recipe in basket:
-                ingredients = IngredientInRecipe.objects.filter(
-                    recipe=recipe.recipe.id
-                ).values(
-                    "ingredient__name",
-                    "amount",
-                    "ingredient__measurement_unit",
+            ingredients = (
+                IngredientInRecipe.objects.filter(
+                    recipe__baskets__user=request.user
                 )
-                for ingredient in ingredients:
-                    name = ingredient["ingredient__name"]
-                    amount = ingredient["amount"]
-                    measurement_unit = ingredient[
-                        "ingredient__measurement_unit"
-                    ]
-                    if name in products.keys():
-                        last_number = products[name][0]
-                        products[name] = [
-                            amount + last_number,
-                            measurement_unit,
-                        ]
-                    else:
-                        products[name] = [amount, measurement_unit]
+                .values("ingredient__name", "ingredient__measurement_unit")
+                .annotate(total_amount=Sum("amount"))
+                .order_by()
+            )
+            for ingredient in ingredients:
+                name = ingredient["ingredient__name"]
+                amount = ingredient["total_amount"]
+                measurement_unit = ingredient["ingredient__measurement_unit"]
+                products[name] = [amount, measurement_unit]
             content = ""
             for k, v in products.items():
                 product = f"Наименование: {k}, количество: {v[0]}, {v[1]}.\n"
@@ -188,20 +169,19 @@ class FollowAPIView(APIView):
                 "following": pk,
             }
         )
-        if serializer.is_valid():
-            serializer.save()
-            queryset = User.objects.filter(id=pk)
-            recipes_count = len(Recipe.objects.filter(author=pk))
-            serializer = AuthorSerializer(
-                queryset,
-                context={
-                    "recipes_limit": recipes_limit,
-                    "recipes_count": recipes_count,
-                },
-                many=True,
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        queryset = User.objects.filter(id=pk)
+        recipes_count = Recipe.objects.filter(author=pk).count()
+        serializer = AuthorSerializer(
+            queryset,
+            context={
+                "recipes_limit": recipes_limit,
+                "recipes_count": recipes_count,
+            },
+            many=True,
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk):
         condition = Follow.objects.filter(
