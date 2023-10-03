@@ -99,18 +99,16 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get("request")
         user = request.user
-        if request.method == "GET" or "PATCH":
-            return Basket.objects.filter(user=user.id, recipe=obj.id).exists()
-        return False
+        # if request.method == "GET" or "PATCH":
+        return Basket.objects.filter(user=user.id, recipe=obj.id).exists()
+        # return False
 
     def get_is_favorited(self, obj):
         request = self.context.get("request")
         user = request.user
-        if request.method == "GET" or "PATCH":
-            return Favorite.objects.filter(
-                user=user.id, recipe=obj.id
-            ).exists()
-        return False
+        # if request.method == "GET" or "PATCH":
+        return Favorite.objects.filter(user=user.id, recipe=obj.id).exists()
+        # return False
 
 
 class RecipeSerializer(serializers.ModelSerializer):
