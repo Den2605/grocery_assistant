@@ -8,8 +8,6 @@ DEBUG = os.getenv("Debug", default="False")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(",")
 CSRF_TRUSTED_ORIGINS = ["https://task-practicum.ddns.net"]
 
-# DEBUG = True
-# ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
     "api.apps.ApiConfig",
@@ -59,14 +57,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 
-# if DEBUG:
-#    DATABASES = {
-#        "default": {
-#            "ENGINE": "django.db.backends.sqlite3",
-#            "NAME": BASE_DIR / "db.sqlite3",
-#        }
-#    }
-# else:
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -112,9 +102,6 @@ STATIC_ROOT = BASE_DIR / "collected_static"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = "/media/"
 
-# if DEBUG:
-#    MEDIA_ROOT = BASE_DIR / "media"
-
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -136,8 +123,7 @@ DJOSER = {
     "LOGIN_FIELD": "email",
     "PERMISSIONS": {
         "user_list": ["rest_framework.permissions.AllowAny"],
-        # "user": ["rest_framework.permissions.IsAuthenticated"],
-        "user": ["rest_framework.permissions.AllowAny"],
+        "user": ["rest_framework.permissions.IsAuthenticated"],
     },
     "SERIALIZERS": {
         "user": "api.serializers.CustomUserSerializer",
