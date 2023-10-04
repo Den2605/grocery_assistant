@@ -189,8 +189,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe.ingredients.clear()
             self.ingredients_recipe(recipe, ingredients)
         super().update(instance=self.instance, validated_data=validated_data)
-
-        recipe.save()
         return recipe
 
     def to_representation(self, instance):
@@ -309,7 +307,6 @@ class AuthorSerializer(serializers.ModelSerializer, GetRecipe):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["is_subscribed"] = True
-        print(data)
         return data
 
 

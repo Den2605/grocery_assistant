@@ -13,7 +13,5 @@ class AuthorOrReadOnly(permissions.BasePermission):
             return True
         if request.method == "POST":
             return request.user.is_authenticated
-        if request.method == "PATCH":
-            return obj.author == request.user
-        if request.method == "DELETE":
+        if request.method in ["PATCH", "DELETE"]:
             return obj.author == request.user
