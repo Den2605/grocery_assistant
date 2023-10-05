@@ -312,6 +312,7 @@ class AuthorSerializer(serializers.ModelSerializer, GetRecipe):
 
 class AuthorGetSerializer(serializers.ModelSerializer, GetRecipe):
     recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -322,10 +323,15 @@ class AuthorGetSerializer(serializers.ModelSerializer, GetRecipe):
             "first_name",
             "last_name",
             "recipes",
+            "recipes_count",
         )
 
     def get_recipes(self, obj):
         return super().get_author_recipes(obj)
+
+    def get_recipes_count(self, obj):
+        recipe_count = Recipe.objects.filter(author=obj.id).count()
+        return recipe_count
 
 
 class FollowSerializer(serializers.ModelSerializer):
