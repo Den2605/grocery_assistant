@@ -272,45 +272,45 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
         )
 
 
-class GetRecipe:
-    def get_author_recipes(self, obj):
-        recipes_limit = self.context.get("recipes_limit")
-        if recipes_limit:
-            recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
-        else:
-            recipe = Recipe.objects.filter(author=obj.id)
-        return RecipeFollowSerializer(recipe, many=True).data
+# class GetRecipe:
+#    def get_author_recipes(self, obj):
+#        recipes_limit = self.context.get("recipes_limit")
+#        if recipes_limit:
+#           recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
+#        else:
+#            recipe = Recipe.objects.filter(author=obj.id)
+#        return RecipeFollowSerializer(recipe, many=True).data
 
 
-class AuthorSerializer(serializers.ModelSerializer, GetRecipe):
-    recipes = serializers.SerializerMethodField(read_only=True)
-    recipes_count = serializers.SerializerMethodField()
+# class AuthorSerializer(serializers.ModelSerializer, GetRecipe):
+#    recipes = serializers.SerializerMethodField(read_only=True)
+#    recipes_count = serializers.SerializerMethodField()
+#
+#    class Meta:
+#        model = User
+#        fields = (
+#            "email",
+#            "id",
+#            "username",
+#            "first_name",
+#            "last_name",
+#            "recipes",
+#            "recipes_count",
+#        )
 
-    class Meta:
-        model = User
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "recipes",
-            "recipes_count",
-        )
+#    def get_recipes(self, obj):
+#        return super().get_author_recipes(obj)
 
-    def get_recipes(self, obj):
-        return super().get_author_recipes(obj)
+#    def get_recipes_count(self, obj):
+#        return self.context.get("recipes_count")
 
-    def get_recipes_count(self, obj):
-        return self.context.get("recipes_count")
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data["is_subscribed"] = True
-        return data
+#    def to_representation(self, instance):
+#        data = super().to_representation(instance)
+#        data["is_subscribed"] = True
+#        return data
 
 
-class AuthorGetSerializer(serializers.ModelSerializer, GetRecipe):
+class AuthorGetSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
@@ -327,7 +327,13 @@ class AuthorGetSerializer(serializers.ModelSerializer, GetRecipe):
         )
 
     def get_recipes(self, obj):
-        return super().get_author_recipes(obj)
+        recipes_limit = self.context.get("recipes_limit")
+        if recipes_limit:
+            recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
+        else:
+            recipe = Recipe.objects.filter(author=obj.id)
+        return RecipeFollowSerializer(recipe, many=True).data
+        # return super().get_author_recipes(obj)
 
     def get_recipes_count(self, obj):
         recipe_count = Recipe.objects.filter(author=obj.id).count()

@@ -8,9 +8,8 @@ from rest_framework.views import APIView
 
 from api.filters import CustomSearchFilter, RecipeFilter
 from api.permissions import AuthorOrReadOnly
-from api.serializers import (
+from api.serializers import (  # AuthorSerializer,
     AuthorGetSerializer,
-    AuthorSerializer,
     FavoriteSerializer,
     FollowSerializer,
     IngredientSerializer,
@@ -173,15 +172,22 @@ class FollowAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         queryset = User.objects.filter(id=pk)
-        recipes_count = Recipe.objects.filter(author=pk).count()
-        serializer = AuthorSerializer(
+        serializer = AuthorGetSerializer(
             queryset,
             context={
                 "recipes_limit": recipes_limit,
-                "recipes_count": recipes_count,
             },
             many=True,
         )
+        # recipes_count = Recipe.objects.filter(author=pk).count()
+        # serializer = AuthorSerializer(
+        #    queryset,
+        #    context={
+        #        "recipes_limit": recipes_limit,
+        #        "recipes_count": recipes_count,
+        #    },
+        #    many=True,
+        # )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk):
