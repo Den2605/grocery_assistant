@@ -144,25 +144,20 @@ class FollowViewset(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    # serializer_class = AuthorGetSerializer
+    serializer_class = AuthorGetSerializer
 
-    # def get_queryset(self):
-    #    user = self.request.user.id
-    #    queryset = User.objects.filter(follow__user=user)
-    #    return queryset
-
-    def get_serializer(self, *args, **kwargs):
+    def get_queryset(self):
         user = self.request.user.id
         queryset = User.objects.filter(follow__user=user)
+        return queryset
+
+    def get_serializer_context(self):
         recipes_limit = self.request.query_params.get("recipes_limit", None)
-        serializer = AuthorGetSerializer(
-            queryset,
-            context={
-                "recipes_limit": recipes_limit,
-            },
-            many=True,
-        )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return {
+            "request": self.request,
+            "recipes_limit": recipes_limit,
+            "view": self,
+        }
 
 
 class FollowAPIView(APIView):
