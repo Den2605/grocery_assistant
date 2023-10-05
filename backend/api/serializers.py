@@ -297,8 +297,7 @@ class AuthorGetSerializer(serializers.ModelSerializer):
         return RecipeFollowSerializer(recipe, many=True).data
 
     def get_recipes_count(self, obj):
-        recipe_count = Recipe.objects.filter(author=obj.id).count()
-        return recipe_count
+        return Recipe.objects.filter(author=obj.id).count()
 
 
 class FollowSerializer(serializers.ModelSerializer):
