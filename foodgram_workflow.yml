@@ -12,9 +12,9 @@ jobs:
       postgres:
         image: postgres:13.10
         env:
-          POSTGRES_USER: foodgram_user
-          POSTGRES_PASSWORD: foodgram_password
-          POSTGRES_DB: foodgram
+          POSTGRES_USER: ${POSTGRES_USER}
+          POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+          POSTGRES_DB: ${POSTGRES_DB}
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -32,11 +32,11 @@ jobs:
         pip install -r ./backend/requirements.txt 
     - name: Test with flake8
       env:
-        POSTGRES_USER: foodgram_user
-        POSTGRES_PASSWORD: foodgram_password
-        POSTGRES_DB: foodgram
-        DB_HOST: 127.0.0.1
-        DB_PORT: 5432
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+        DB_PORT: ${DB_PORT}
+        DB_HOST: ${DB_HOST}
       run: |
         python -m flake8 backend/
         
@@ -117,7 +117,7 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "docker-compose.production.yml"
+        source: "infra/docker-compose.production.yml"
         target: "foodgram"
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
@@ -137,7 +137,9 @@ jobs:
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
           sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
-          #При первом запуске: загрузка ингридиентов в базу данных
+          # При первом запуске: загрузка ингридиентов в базу данных
+          #Загрузка ингридиентов в базу данных
           #sudo docker compose -f docker-compose.production.yml exec backend python manage.py ingredients_csv
+          #Загрузка тегов в базу данных
           #sudo docker compose -f docker-compose.production.yml exec backend python manage.py tags_csv
           
