@@ -116,7 +116,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         basket = Basket.objects.filter(user=request.user)
-        products = dict()
+        # products = dict()
         if basket.exists():
             ingredients = (
                 IngredientInRecipe.objects.filter(
@@ -126,16 +126,23 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 .annotate(total_amount=Sum("amount"))
                 .order_by()
             )
-            for ingredient in ingredients:
-                name = ingredient["ingredient__name"]
-                amount = ingredient["total_amount"]
-                measurement_unit = ingredient["ingredient__measurement_unit"]
-                products[name] = [amount, measurement_unit]
-            content = ""
-            for k, v in products.items():
-                product = f"Наименование: {k}, количество: {v[0]}, {v[1]}.\n"
-                content += product
-            return HttpResponse(content, content_type="text/plain")
+            products = [
+                ("{} ({}) - {}".format(*ingredient) + "\n")
+                for ingredient in ingredients
+            ]
+
+            # for ingredient in ingredients:
+            #     name = ingredient["ingredient__name"]
+            #     amount = ingredient["total_amount"]
+            #     measurement_unit = ingredient["ingredient__measurement_unit"]
+            #     products[name] = [amount, measurement_unit]
+            # content = ""
+            # for k, v in products.items():
+            #     product = f"Наименование: {k}, количество: {v[0]}, {v[1]}.\n"
+            #     content += product
+            return HttpResponse(
+                "Корзина:\n" + "\n".join(products), content_type="text/plain"
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
