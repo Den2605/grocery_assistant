@@ -12,6 +12,8 @@ username_validator = RegexValidator(
 
 
 class CustomUser(AbstractUser):
+    """Пользователь."""
+
     USERNAME_FIELD = "email"
     email = models.EmailField(
         verbose_name="Адрес электронной почты",

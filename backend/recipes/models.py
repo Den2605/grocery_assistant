@@ -5,7 +5,7 @@ from users.models import CustomUser as User
 
 
 class Tag(models.Model):
-    """Теги."""
+    """Теги рецепта."""
 
     name = models.CharField(
         verbose_name="Название тега",
@@ -31,7 +31,7 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """Ингредиенты."""
+    """Ингредиенты рецепта."""
 
     name = models.CharField(
         verbose_name="Название ингредиента",
@@ -105,6 +105,8 @@ class Recipe(models.Model):
 
 
 class Follow(models.Model):
+    """Подписка."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -132,7 +134,7 @@ class Follow(models.Model):
 
 
 class TagInRecipe(models.Model):
-    """Промежуточная модель Tags"""
+    """Промежуточная модель связи тегов и рецептов."""
 
     tag = models.ForeignKey(
         Tag,
@@ -156,7 +158,7 @@ class TagInRecipe(models.Model):
 
 
 class IngredientInRecipe(models.Model):
-    """Промежуточная модель Ingredients"""
+    """Промежуточная модель для связи ингредиентов и рецептов."""
 
     ingredient = models.ForeignKey(
         Ingredient,

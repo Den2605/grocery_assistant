@@ -1,6 +1,14 @@
 from django.contrib import admin
 
-from .models import Basket, Favorite, Follow, Ingredient, Recipe, Tag
+from .models import (
+    Basket,
+    Favorite,
+    Follow,
+    Ingredient,
+    IngredientInRecipe,
+    Recipe,
+    Tag,
+)
 
 
 @admin.register(Tag)
@@ -25,6 +33,12 @@ class IngredientAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
+class IngredientInRecipeInline(admin.TabularInline):
+    model = IngredientInRecipe
+    min_num = 1
+    extra = 3
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
@@ -35,13 +49,31 @@ class RecipeAdmin(admin.ModelAdmin):
         "text",
         "cooking_time",
         "pub_date",
+        "in_favorites",
+        "get_ingredients",
     )
     search_fields = (
         "name",
         "author",
         "tags",
     )
+    list_filter = (
+        "name",
+        "author",
+    )
+    inlines = (IngredientInRecipeInline,)
     empty_value_display = "-пусто-"
+
+    @admin.display(description="В избранном")
+    def in_favorites(self, obj):
+        return obj.recipe_favorite.all().count()
+
+    @admin.display(description="Ингредиенты")
+    def get_ingredients(self, obj):
+        ingredients_list = []
+        for ingredient in obj.ingredients.all():
+            ingredients_list.append(ingredient.name.lower())
+        return ", ".join(ingredients_list)
 
 
 @admin.register(Follow)
@@ -51,7 +83,10 @@ class FollowAdmin(admin.ModelAdmin):
         "user",
         "following",
     )
-    empty_value_display = "-пусто-"
+    search_fields = (
+        "user",
+        "following",
+    )
 
 
 @admin.register(Basket)
