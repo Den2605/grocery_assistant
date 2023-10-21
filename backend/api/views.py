@@ -128,7 +128,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 )
             )
             products = [
-                ("{} ({}) - {}".format(*ingredient) + "\n")
+                ("{} ({}) - {}".format(*ingredient))
                 for ingredient in ingredients
             ]
             return HttpResponse(
