@@ -113,10 +113,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
-        if not request.user.is_authenticated:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
         basket = Basket.objects.filter(user=request.user)
-        # products = dict()
         if basket.exists():
             ingredients = (
                 IngredientInRecipe.objects.filter(
@@ -124,22 +121,16 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 )
                 .values("ingredient__name", "ingredient__measurement_unit")
                 .annotate(total_amount=Sum("amount"))
-                .order_by()
+                .values_list(
+                    "ingredient__name",
+                    "ingredient__measurement_unit",
+                    "total_amount",
+                )
             )
             products = [
                 ("{} ({}) - {}".format(*ingredient) + "\n")
                 for ingredient in ingredients
             ]
-
-            # for ingredient in ingredients:
-            #     name = ingredient["ingredient__name"]
-            #     amount = ingredient["total_amount"]
-            #     measurement_unit = ingredient["ingredient__measurement_unit"]
-            #     products[name] = [amount, measurement_unit]
-            # content = ""
-            # for k, v in products.items():
-            #     product = f"Наименование: {k}, количество: {v[0]}, {v[1]}.\n"
-            #     content += product
             return HttpResponse(
                 "Корзина:\n" + "\n".join(products), content_type="text/plain"
             )
