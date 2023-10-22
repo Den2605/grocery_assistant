@@ -198,14 +198,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-def delete_recipe_user(data):
-    if data["recipe"]:
-        del data["recipe"]
-    if data["user"]:
-        del data["user"]
-    return data
-
-
 class ShoppincartSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source="recipe.name")
     image = Base64ImageField(source="recipe.image")
@@ -219,11 +211,6 @@ class ShoppincartSerializer(serializers.ModelSerializer):
                 queryset=Basket.objects.all(), fields=("user", "recipe")
             )
         ]
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        delete_recipe_user(data)
-        return data
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -239,11 +226,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
                 queryset=Favorite.objects.all(), fields=("user", "recipe")
             )
         ]
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        delete_recipe_user(data)
-        return data
 
 
 class RecipeFollowSerializer(serializers.ModelSerializer):
