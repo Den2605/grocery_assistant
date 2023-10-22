@@ -70,14 +70,12 @@ class CustomUserViewSet(UserViewSet):
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == "DELETE":
-            follow = Follow.objects.filter(
-                user=request.user.id,
-                following=author_id,
-            )
-            if follow:
-                follow.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
+        follow = Follow.objects.filter(
+            user=request.user.id, following=author_id
+        )
+        if follow:
+            follow.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
