@@ -17,23 +17,23 @@ router.register(r"tags", TagsViewSet, basename="tags")
 router.register(r"ingredients", IngredientsViewSet, basename="ingredients")
 
 urlpatterns = [
-    path(
-        "recipes/download_shopping_cart/",
-        RecipesViewSet.as_view({"get": "download_shopping_cart"}),
-        name="recipes_download_shopping_cart",
-    ),
-    path(
-        "recipes/<int:pk>/shopping_cart/",
-        RecipesViewSet.as_view(
-            {"post": "shopping_cart", "delete": "shopping_cart"}
-        ),
-        name="recipes_shopping_cart",
-    ),
-    path(
-        "recipes/<int:pk>/favorite/",
-        RecipesViewSet.as_view({"post": "favorite", "delete": "favorite"}),
-        name="recipes_favorite",
-    ),
+    # path(
+    #     "recipes/download_shopping_cart/",
+    #     RecipesViewSet.as_view({"get": "download_shopping_cart"}),
+    #     name="recipes_download_shopping_cart",
+    # ),
+    # path(
+    #     "recipes/<int:pk>/shopping_cart/",
+    #     RecipesViewSet.as_view(
+    #         {"post": "shopping_cart", "delete": "shopping_cart"}
+    #     ),
+    #     name="recipes_shopping_cart",
+    # ),
+    # path(
+    #     "recipes/<int:pk>/favorite/",
+    #     RecipesViewSet.as_view({"post": "favorite", "delete": "favorite"}),
+    #     name="recipes_favorite",
+    # ),
     path("", include(router.urls)),
     path(
         "users/subscriptions/",
