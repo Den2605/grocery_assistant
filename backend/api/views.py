@@ -1,15 +1,17 @@
 from django.db.models.aggregates import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, permissions, status, viewsets
+from djoser.views import UserViewSet
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from api.filters import CustomSearchFilter, RecipeFilter
 from api.permissions import AuthorOrReadOnly
 from api.serializers import (
     AuthorGetSerializer,
+    CustomUserSerializer,
     FavoriteSerializer,
     FollowSerializer,
     IngredientSerializer,
@@ -28,6 +30,75 @@ from recipes.models import (
     Tag,
 )
 from users.models import CustomUser as User
+
+
+class CustomUserViewSet(UserViewSet):
+    """
+    Вьюсет представления пользовательской модели пользователя
+    с дополнительными действиями.
+    """
+
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+
+    @action(
+        detail=True,
+        methods=["post", "delete"],
+        permission_classes=(IsAuthenticated,),
+    )
+    def subscribe(self, request, **kwargs):
+        """Метод для подписки и отписки пользователя на авторов рецептов."""
+        author_id = self.kwargs.get("id")
+        recipes_limit = self.request.query_params.get("recipes_limit", None)
+        user_id = self.request.user.id
+        if request.method == "POST":
+            serializer = FollowSerializer(
+                data={
+                    "user": user_id,
+                    "following": author_id,
+                }
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            queryset = User.objects.filter(id=author_id)
+            serializer = AuthorGetSerializer(
+                queryset,
+                context={
+                    "recipes_limit": recipes_limit,
+                },
+                many=True,
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == "DELETE":
+            follow = Follow.objects.filter(
+                user=request.user.id,
+                following=author_id,
+            )
+            if follow:
+                follow.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        detail=False,
+        permission_classes=(IsAuthenticated,),
+    )
+    def subscriptions(self, request):
+        """Метод для просмотра авторов на которых подписан пользователь."""
+        user = self.request.user.id
+        queryset = User.objects.filter(follow__user=user)
+        pages = self.paginate_queryset(queryset)
+        recipes_limit = self.request.query_params.get("recipes_limit", None)
+        serializer = AuthorGetSerializer(
+            pages,
+            context={
+                "recipes_limit": recipes_limit,
+                "request": request,
+            },
+            many=True,
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -147,67 +218,3 @@ class RecipesViewSet(viewsets.ModelViewSet):
                 "Корзина:\n" + "\n".join(products), content_type="text/plain"
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class FollowViewset(
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet,
-):
-    """Создан для отображения авторов на которых подписан пользователь."""
-
-    serializer_class = AuthorGetSerializer
-
-    def get_queryset(self):
-        """Метод получения списка авторов на которых подписан пользователь."""
-        user = self.request.user.id
-        queryset = User.objects.filter(follow__user=user)
-        return queryset
-
-    def get_serializer_context(self):
-        """Метод передачи параметра recipes_limit для сереализатора."""
-        recipes_limit = self.request.query_params.get("recipes_limit", None)
-        return {
-            "request": self.request,
-            "recipes_limit": recipes_limit,
-            "view": self,
-        }
-
-
-class FollowAPIView(APIView):
-    """Вью функция подписки и отписки пользователя на авторов рецептов."""
-
-    def post(self, request, pk):
-        """Метод создания подписки."""
-        recipes_limit = self.request.query_params.get("recipes_limit", None)
-        user_id = self.request.user.id
-        serializer = FollowSerializer(
-            data={
-                "user": user_id,
-                "following": pk,
-            }
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        queryset = User.objects.filter(id=pk)
-        serializer = AuthorGetSerializer(
-            queryset,
-            context={
-                "recipes_limit": recipes_limit,
-            },
-            many=True,
-        )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def delete(self, request, pk):
-        """Метод удаления подписки."""
-        condition = Follow.objects.filter(
-            user=request.user.id,
-            following=pk,
-        ).exists()
-        if condition:
-            Follow.objects.filter(
-                user=request.user.id,
-                following=pk,
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)

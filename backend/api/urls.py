@@ -4,8 +4,7 @@ from django.urls import include, path
 from rest_framework import routers
 
 from api.views import (
-    FollowAPIView,
-    FollowViewset,
+    CustomUserViewSet,
     IngredientsViewSet,
     RecipesViewSet,
     TagsViewSet,
@@ -15,6 +14,7 @@ router = routers.DefaultRouter()
 router.register(r"recipes", RecipesViewSet, basename="recipes")
 router.register(r"tags", TagsViewSet, basename="tags")
 router.register(r"ingredients", IngredientsViewSet, basename="ingredients")
+router.register(r"users", CustomUserViewSet, basename="users")
 
 urlpatterns = [
     path(
@@ -23,12 +23,6 @@ urlpatterns = [
         name="recipes_download_shopping_cart",
     ),
     path("", include(router.urls)),
-    path(
-        "users/subscriptions/",
-        FollowViewset.as_view({"get": "list"}),
-        name="follow_users",
-    ),
-    path("users/<int:pk>/subscribe/", FollowAPIView.as_view()),
     path("", include("djoser.urls")),
     path("auth/", include("djoser.urls.authtoken")),
 ]
