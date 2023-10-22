@@ -153,7 +153,7 @@ class FollowViewset(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Создан для отображения авторов и на которых подписан пользователь."""
+    """Создан для отображения авторов на которых подписан пользователь."""
 
     serializer_class = AuthorGetSerializer
 
