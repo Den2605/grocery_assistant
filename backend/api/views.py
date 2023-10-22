@@ -31,6 +31,8 @@ from users.models import CustomUser as User
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет для работы с тегами."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
@@ -38,6 +40,8 @@ class TagsViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
+    """Вьюсет для работы с ингредиентами."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
@@ -47,23 +51,28 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
+    """Вьюсет рецептов."""
+
     queryset = Recipe.objects.all()
     permission_classes = (AuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
     def get_serializer_class(self, *args, **kwargs):
+        """Метод определения сереализатора."""
         if self.request.method == "GET":
             return RecipeGetSerializer
         return RecipeSerializer
 
     def perform_create(self, serializer):
+        """Метод сохранения данных сереализатора."""
         serializer.save(author=self.request.user)
         return super().perform_create(serializer)
 
     def shopping_or_favorite(
         self, current_model, current_serializer, request, pk=None
     ):
+        """Метод добавления рецептов в корзину,избраное или удаление из них."""
         user = request.user.id
         if not Recipe.objects.filter(id=pk).exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -93,6 +102,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def favorite(self, request, pk=None):
+        """Создан для добавления и удаления рецепта из избранного."""
         return self.shopping_or_favorite(
             Favorite, FavoriteSerializer, request, pk=pk
         )
@@ -103,6 +113,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def shopping_cart(self, request, pk=None):
+        """Создан для добавления и удаления рецепта из списка покупок."""
         return self.shopping_or_favorite(
             Basket, ShoppincartSerializer, request, pk=pk
         )
@@ -113,6 +124,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
+        """Создан для скачивания файла со списком покупок."""
         basket = Basket.objects.filter(user=request.user)
         if basket.exists():
             ingredients = (
@@ -141,14 +153,18 @@ class FollowViewset(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
+    """Создан для отображения авторов и на которых подписан пользователь."""
+
     serializer_class = AuthorGetSerializer
 
     def get_queryset(self):
+        """Метод получения списка авторов на которых подписан пользователь."""
         user = self.request.user.id
         queryset = User.objects.filter(follow__user=user)
         return queryset
 
     def get_serializer_context(self):
+        """Метод передачи параметра recipes_limit для сереализатора."""
         recipes_limit = self.request.query_params.get("recipes_limit", None)
         return {
             "request": self.request,
@@ -158,7 +174,10 @@ class FollowViewset(
 
 
 class FollowAPIView(APIView):
+    """Вью функция подписки и отписки пользователя на авторов рецептов."""
+
     def post(self, request, pk):
+        """Метод создания подписки."""
         recipes_limit = self.request.query_params.get("recipes_limit", None)
         user_id = self.request.user.id
         serializer = FollowSerializer(
@@ -180,6 +199,7 @@ class FollowAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk):
+        """Метод удаления подписки."""
         condition = Follow.objects.filter(
             user=request.user.id,
             following=pk,

@@ -1,17 +1,13 @@
-from rest_framework import permissions
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticatedOrReadOnly
 
 
-class AuthorOrReadOnly(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.is_authenticated
-        )
+class AuthorOrReadOnly(IsAuthenticatedOrReadOnly):
+    """
+    Разрешение для автора или безопасных методов.
+    """
 
     def has_object_permission(self, request, view, obj):
-        if request.method == "GET":
-            return True
-        if request.method == "POST":
-            return request.user.is_authenticated
-        if request.method in ["PATCH", "DELETE"]:
-            return obj.author == request.user
+        """
+        Проверка, является ли пользователь автором объекта.
+        """
+        return request.method in SAFE_METHODS or obj.author == request.user
