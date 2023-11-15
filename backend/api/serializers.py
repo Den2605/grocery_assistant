@@ -305,10 +305,9 @@ class AuthorGetSerializer(serializers.ModelSerializer):
     def get_recipes(self, obj):
         """Метод получение рецепта."""
         recipes_limit = self.context.get("recipes_limit")
+        recipe = Recipe.objects.filter(author=obj.id)
         if recipes_limit:
-            recipe = Recipe.objects.filter(author=obj.id)[: int(recipes_limit)]
-        else:
-            recipe = Recipe.objects.filter(author=obj.id)
+            recipe = recipe[: int(recipes_limit)]
         return RecipeFollowSerializer(recipe, many=True).data
 
     def get_recipes_count(self, obj):
