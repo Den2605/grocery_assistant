@@ -34,11 +34,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         """Метод получение статуса подписки на пользователя."""
         request = self.context.get("request")
+        user = request.user
         return (
-            request.user.is_authenticated
-            and Follow.objects.filter(
-                user=request.user.id, following=obj.id
-            ).exists()
+            user.is_authenticated
+            and Follow.objects.filter(user=user.id, following=obj.id).exists()
         )
 
 
@@ -128,7 +127,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
     )
     tags = serializers.PrimaryKeyRelatedField(
-        queryset=Tag.objects.all(), many=True
+        queryset=Tag.objects.all(),
+        many=True,
     )
     image = Base64ImageField(
         required=True,
@@ -162,14 +162,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients_list = []
         for ingredient in data:
             if int(ingredient["amount"]) < 1:
-                raise ValidationError(
-                    "Заполните поле количества ингредиентов."
-                )
+                raise ValidationError("Поле количества ингредиентов пусто.")
             id = ingredient["ingredient"]["id"]
             if id in ingredients_list:
-                raise ValidationError(
-                    f"Ингредиент id = {id} уже есть в списке."
-                )
+                raise ValidationError(f"Ингредиент id={id} уже есть в списке.")
             ingredients_list.append(id)
         return data
 
@@ -306,7 +302,7 @@ class AuthorGetSerializer(serializers.ModelSerializer):
         """Метод получение рецепта."""
         recipes_limit = self.context.get("recipes_limit")
         recipe = Recipe.objects.filter(author=obj.id)
-        if recipes_limit:
+        if recipes_limit is not None and recipes_limit.isdigit():
             recipe = recipe[: int(recipes_limit)]
         return RecipeFollowSerializer(recipe, many=True).data
 
@@ -334,7 +330,5 @@ class FollowSerializer(serializers.ModelSerializer):
     def validate_following(self, value):
         """Проверка подписчика."""
         if value.id == self.initial_data["user"]:
-            raise serializers.ValidationError(
-                "Нельзя подписаться на самого себя."
-            )
+            raise serializers.ValidationError("Нельзя подписаться на себя.")
         return value
