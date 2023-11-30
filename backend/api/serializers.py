@@ -284,7 +284,7 @@ class AuthorGetSerializer(serializers.ModelSerializer):
     """Сереализатор Подписок. для GET запроса."""
 
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField()
 
     class Meta:
         model = User
@@ -300,15 +300,12 @@ class AuthorGetSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         """Метод получение рецепта."""
-        recipes_limit = self.context.get("recipes_limit")
-        recipe = Recipe.objects.filter(author=obj.id)
+        request = self.context.get("request")
+        recipes_limit = request.GET.get("recipes_limit")
+        recipe = obj.recipes.all()
         if recipes_limit is not None and recipes_limit.isdigit():
             recipe = recipe[: int(recipes_limit)]
         return RecipeFollowSerializer(recipe, many=True).data
-
-    def get_recipes_count(self, obj):
-        """Метод получения колличества рецепта."""
-        return Recipe.objects.filter(author=obj.id).count()
 
 
 class FollowSerializer(serializers.ModelSerializer):

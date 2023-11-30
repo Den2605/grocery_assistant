@@ -1,4 +1,4 @@
-from django.db.models.aggregates import Sum
+from django.db.models.aggregates import Count, Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
@@ -49,7 +49,6 @@ class CustomUserViewSet(UserViewSet):
     def subscribe(self, request, **kwargs):
         """Метод для подписки и отписки пользователя на авторов рецептов."""
         author_id = self.kwargs.get("id")
-        recipes_limit = self.request.query_params.get("recipes_limit", None)
         user_id = self.request.user.id
         if request.method == "POST":
             serializer = FollowSerializer(
@@ -60,19 +59,17 @@ class CustomUserViewSet(UserViewSet):
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            queryset = User.objects.filter(id=author_id)
+            queryset = User.objects.filter(id=author_id).annotate(
+                recipes_count=Count("recipes")
+            )
             serializer = AuthorGetSerializer(
                 queryset,
-                context={
-                    "recipes_limit": recipes_limit,
-                },
                 many=True,
+                context={"request": request},
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        follow = Follow.objects.filter(
-            user=request.user.id, following=author_id
-        )
+        follow = Follow.objects.filter(user=user_id, following=author_id)
         if follow:
             follow.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -87,14 +84,10 @@ class CustomUserViewSet(UserViewSet):
         user = self.request.user.id
         queryset = User.objects.filter(follow__user=user)
         pages = self.paginate_queryset(queryset)
-        recipes_limit = self.request.query_params.get("recipes_limit", None)
         serializer = AuthorGetSerializer(
             pages,
-            context={
-                "recipes_limit": recipes_limit,
-                "request": request,
-            },
             many=True,
+            context={"request": request},
         )
         return self.get_paginated_response(serializer.data)
 
@@ -139,7 +132,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return super().perform_create(serializer)
 
     def shopping_or_favorite(
-        self, current_model, current_serializer, request, pk=None
+        self,
+        current_model,
+        current_serializer,
+        request,
+        pk=None,
     ):
         """Метод добавления рецептов в корзину,избраное или удаление из них."""
         user = request.user.id
@@ -173,7 +170,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         """Создан для добавления и удаления рецепта из избранного."""
         return self.shopping_or_favorite(
-            Favorite, FavoriteSerializer, request, pk=pk
+            Favorite,
+            FavoriteSerializer,
+            request,
+            pk=pk,
         )
 
     @action(
@@ -184,7 +184,10 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, pk=None):
         """Создан для добавления и удаления рецепта из списка покупок."""
         return self.shopping_or_favorite(
-            Basket, ShoppincartSerializer, request, pk=pk
+            Basket,
+            ShoppincartSerializer,
+            request,
+            pk=pk,
         )
 
     @action(
@@ -194,12 +197,11 @@ class RecipesViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         """Создан для скачивания файла со списком покупок."""
-        basket = Basket.objects.filter(user=request.user)
+        user = request.user
+        basket = Basket.objects.filter(user=user)
         if basket.exists():
             ingredients = (
-                IngredientInRecipe.objects.filter(
-                    recipe__baskets__user=request.user
-                )
+                IngredientInRecipe.objects.filter(recipe__baskets__user=user)
                 .values("ingredient__name", "ingredient__measurement_unit")
                 .annotate(total_amount=Sum("amount"))
                 .values_list(
@@ -208,10 +210,8 @@ class RecipesViewSet(viewsets.ModelViewSet):
                     "total_amount",
                 )
             )
-            products = [
-                ("{} ({}) - {}".format(*ingredient))
-                for ingredient in ingredients
-            ]
+            for ingredient in ingredients:
+                products = ["{} ({}) - {}".format(*ingredient)]
             return HttpResponse(
                 "Корзина:\n" + "\n".join(products), content_type="text/plain"
             )
